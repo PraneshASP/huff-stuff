@@ -1,0 +1,39 @@
+/* Imports */
+#include '../DateTimeLib.huff'
+
+/* Functions */
+#define function weekday(uint256) nonpayable returns (uint256)
+#define function isLeapYear(uint256) nonpayable returns (bool)
+
+/* Wrapper Macros */
+#define macro WEEKDAY_WRAPPER() = takes (0) returns (0) {
+    0x04 calldataload    // [timestamp]
+    WEEKDAY()        // [result]
+    0x00 mstore          // []
+    0x20 0x00 return     // []  
+ }
+
+
+/* Function Dispatcher */
+#define macro MAIN() = takes (0) returns (0) {
+    // Identify which function is being called.
+    0x00 calldataload 
+    
+    // Extract the function singature
+    0xe0 shr
+
+    // Jump table
+    dup1 __FUNC_SIG(weekday)    eq  weekday      jumpi
+    //dup1 __FUNC_SIG(isLeapYear) eq  isLeapYear   jumpi
+ 
+
+    weekday:
+        WEEKDAY_WRAPPER()
+
+    // isLeapYear:
+    //     IS_LEAP_YEAR_WRAPPER()
+
+
+}
+
+
