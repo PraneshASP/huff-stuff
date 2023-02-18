@@ -1,0 +1,22 @@
+/* Methods */
+
+/// @dev Returns day of the week (Monday is indicated as 1 and so on) 
+#define macro WEEKDAY() = takes (0) returns (0) {
+    // Formula: ((timestamp / 86400 + 3) % 7) + 1;
+    
+    // Input Stack: [timestamp(t)]
+    
+    0x15180       // [86400, t]
+    swap1         // [t,86400]
+    div           // [t/86400]
+    0x03          // [3, t/86400] 
+    add           // [3 + t/86400]
+    0x07          // [7, (3+t/86400)]
+    swap1         // [(t/86400 + 3), 7]  
+    mod           // [(t/86400 + 3) % 7]
+    0x01          // [1, (t/86400 + 3)%7]
+    add           // [1 + (t/86400 + 3)%7]
+
+    // Return stack: [result]
+}
+
