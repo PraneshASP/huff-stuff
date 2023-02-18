@@ -54,3 +54,17 @@
 
     // Return stack: [result]
 }
+
+
+ #define macro DAYS_IN_MONTH() = takes (0) returns (0) {      
+
+    // Input Stack : [month, year]
+
+    
+    // Push days in month map: [31,28,31,30,31,30,31,31,30,31,30,31]
+    0x1F1C1F1E1F1E1F1F1E1F1E1F // [daysInMonthMap,month, year]
+    dup2                       // [month,daysInMonthMap, month, year]
+    0x13                       // [19,month, daysInMonthMap, month, year]
+    add                        // [monthOffset, daysInMonthMap, month, year]
+    byte                       // [daysInMonth, month, year]
+ }
