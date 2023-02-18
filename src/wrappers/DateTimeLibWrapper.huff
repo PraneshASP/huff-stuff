@@ -8,7 +8,14 @@
 /* Wrapper Macros */
 #define macro WEEKDAY_WRAPPER() = takes (0) returns (0) {
     0x04 calldataload    // [timestamp]
-    WEEKDAY()        // [result]
+    WEEKDAY()            // [result]
+    0x00 mstore          // []
+    0x20 0x00 return     // []  
+ }
+
+#define macro IS_LEAP_YEAR_WRAPPER() = takes (0) returns (0) {
+    0x04 calldataload    // [timestamp]
+    IS_LEAP_YEAR()       // [result]
     0x00 mstore          // []
     0x20 0x00 return     // []  
  }
@@ -24,14 +31,14 @@
 
     // Jump table
     dup1 __FUNC_SIG(weekday)    eq  weekday      jumpi
-    //dup1 __FUNC_SIG(isLeapYear) eq  isLeapYear   jumpi
+    dup1 __FUNC_SIG(isLeapYear) eq  isLeapYear   jumpi
  
 
     weekday:
         WEEKDAY_WRAPPER()
 
-    // isLeapYear:
-    //     IS_LEAP_YEAR_WRAPPER()
+    isLeapYear:
+        IS_LEAP_YEAR_WRAPPER()
 
 
 }
