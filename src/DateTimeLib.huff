@@ -20,3 +20,37 @@
     // Return stack: [result]
 }
 
+ #define macro IS_LEAP_YEAR() = takes (0) returns (0) {                         
+    // Condition 1, C1 = year % 4 == 0
+    // Condition 2, C2 = year % 100 != 0 
+    // Condition 3, C3 =  year % 400 == 0
+
+    // Formula: C1 && (C2||C3)
+    
+    // Input stack:  [year]
+
+    0x04        // [4, year]
+    dup2        // [year,4,year]
+    mod         // [year % 4, year]
+    iszero      // [C1,year] 
+     
+    
+    0x64       // [100, C1, year]
+    dup3       // [year, 100, C1, year]        
+    mod        // [year % 100, C1, year]
+    iszero     // [year%100==0, C1, year]   
+    not        // [c2,c1, year]
+             
+    0x190       // [400, C2, C1, year]
+    dup4        // [year,400,C2, C1, year]
+    mod         // [year%400, C2,C1, year]
+    iszero      // [C3,C2,C1,year]
+    or          // [(C2||C3),C1, year]
+    and         // [(C2||C3) && C1, year]
+    
+    // Clear stack
+    swap1
+    pop
+
+    // Return stack: [result]
+}
