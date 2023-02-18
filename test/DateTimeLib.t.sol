@@ -27,9 +27,30 @@ contract DateTimeLibTest is Test {
         assertEq(sut.weekday(518400), 3);
     }
 
-    function testWeekdayFuzz(uint256 timestamp) public {
+    function testFuzzWeekday(uint256 timestamp) public {
         timestamp = timestamp % 10**10;
         uint256 weekday = ((timestamp / 86400 + 3) % 7) + 1;
         assertEq(weekday, sut.weekday(timestamp));
+    }
+
+    function testIsLeapYear() public {
+        assertTrue(sut.isLeapYear(2000));
+        assertTrue(sut.isLeapYear(2024));
+        assertTrue(sut.isLeapYear(2048));
+        assertTrue(sut.isLeapYear(2072));
+        assertTrue(sut.isLeapYear(2104));
+        assertTrue(sut.isLeapYear(2128));
+        assertTrue(sut.isLeapYear(10032));
+        assertTrue(sut.isLeapYear(10124));
+        assertTrue(sut.isLeapYear(10296));
+        assertTrue(sut.isLeapYear(10400));
+        assertTrue(sut.isLeapYear(10916));
+    }
+
+    function testFuzzIsLeapYear(uint256 year) public {
+        assertEq(
+            sut.isLeapYear(year),
+            (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0)
+        );
     }
 }
