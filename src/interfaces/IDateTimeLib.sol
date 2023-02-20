@@ -6,4 +6,9 @@ interface IDateTimeLib {
     function weekday(uint256 timestamp) external view returns (uint256 result);
 
     function isLeapYear(uint256 year) external view returns (bool result);
+
+    function daysInMonth(uint256 year, uint256 month)
+        external
+        view
+        returns (uint256 result);
 }
