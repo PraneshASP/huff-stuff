@@ -67,4 +67,19 @@
     0x13                       // [19,month, daysInMonthMap, month, year]
     add                        // [monthOffset, daysInMonthMap, month, year]
     byte                       // [daysInMonth, month, year]
+    dup3                       // [year, daysInMonth, month, year]
+    IS_LEAP_YEAR()             // [isleap(year), daysInMonth, month, year]
+    dup3                       // [month, isleap(year), daysInMonth, month, year]
+    0x02                       // [2, month, isleap(year), daysInMonth, month, year]
+    eq                         // [2==month, isleap(year), daysInMonth, month, year]
+ 
+    and                        // [2==month && isleap(year), daysInMonth, month, year]
+    add                        // [2==month && isleap(year) + daysInMonth, month, year]
+   
+    // Clear stack
+    swap2
+    pop
+    pop
+
+    // Return stack: [result]
  }
