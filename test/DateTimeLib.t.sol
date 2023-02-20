@@ -53,4 +53,43 @@ contract DateTimeLibTest is Test {
             (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0)
         );
     }
+
+    function testDaysInMonth() public {
+        assertEq(sut.daysInMonth(2022, 1), 31);
+        assertEq(sut.daysInMonth(2022, 2), 28);
+        assertEq(sut.daysInMonth(2022, 3), 31);
+        assertEq(sut.daysInMonth(2022, 4), 30);
+        assertEq(sut.daysInMonth(2022, 5), 31);
+        assertEq(sut.daysInMonth(2022, 6), 30);
+        assertEq(sut.daysInMonth(2022, 7), 31);
+        assertEq(sut.daysInMonth(2022, 8), 31);
+        assertEq(sut.daysInMonth(2022, 9), 30);
+        assertEq(sut.daysInMonth(2022, 10), 31);
+        assertEq(sut.daysInMonth(2022, 11), 30);
+        assertEq(sut.daysInMonth(2022, 12), 31);
+        assertEq(sut.daysInMonth(2024, 1), 31);
+        assertEq(sut.daysInMonth(2024, 2), 29);
+        assertEq(sut.daysInMonth(1900, 2), 28);
+    }
+
+    function testDaysInMonth(uint256 year, uint256 month) public {
+        month = bound(month, 1, 12);
+        if (sut.isLeapYear(year) && month == 2) {
+            assertEq(sut.daysInMonth(year, month), 29);
+        } else if (
+            month == 1 ||
+            month == 3 ||
+            month == 5 ||
+            month == 7 ||
+            month == 8 ||
+            month == 10 ||
+            month == 12
+        ) {
+            assertEq(sut.daysInMonth(year, month), 31);
+        } else if (month == 2) {
+            assertEq(sut.daysInMonth(year, month), 28);
+        } else {
+            assertEq(sut.daysInMonth(year, month), 30);
+        }
+    }
 }
