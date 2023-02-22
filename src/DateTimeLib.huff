@@ -150,3 +150,67 @@
 
     // Return stack:    // [timestamp]
  }
+
+
+  #define macro NTH_WEEKDAY_IN_MONTH_OF_YEAR_TIMESTAMP() = takes (0) returns (0)  {
+    // Input stack: [wd, n, m, y]
+    
+    dup4                // [y, wd, n, m, y]
+    dup4                // [m, y, wd, n, m, y]
+    0x1                 // [1, m, y, wd, n, m, y]
+    DATE_TO_EPOCH_DAY() // [d, wd, n, m, y]
+    0x00 mstore         // [wd, n, m, y]
+
+    dup4                // [y, wd, n, m, y]
+    dup4                // [m, y, wd, n, m, y]
+    DAYS_IN_MONTH()     // [md, wd, n, m, y]
+    0x20 mstore         // [wd, n, m, y]
+
+    0x1                 // [1, wd, n, m, y]
+    0x7                 // [7, 1, wd, n, m, y]
+    0x3                 // [3, 7, 1, wd, n, m, y]
+    0x00 mload          // [d, 3, 7, 1, wd, n, m, y]
+    add                 // [d + 3, 7, 1, wd, n, m, y]
+    mod                 // [d + 3 % 7, 1, wd, n, m, y]
+    add                 // [d + 3 % 7 + 1, wd, n, m, y]
+    swap1               // [wd, d + 3 % 7 + 1, n, m, y]
+    sub                 // [wd - d + 3 % 7 + 1, n, m, y]
+    0x40 mstore                    
+
+    0x40 mload          // [diff, n, m, y]
+    0x7                 // [7, diff, n, m, y]
+    0x6                 // [6,7, diff, n, m, y]
+    0x40 mload          // [diff,6,7, diff, n, m, y]
+    gt                  // [diff > 6, 7, diff, n, m, y]
+    mul                 // [diff > 6 * 7, diff, n, m, y]
+    add                 // [diff > 6 * 7 + diff, n, m, y]
+    0x7                 // [7,diff > 6 * 7 + diff, n, m, y]
+    0x1                 // [1, 7, diff > 6 * 7 + diff, n, m, y]
+    dup4                // [n, 1, 7,diff > 6 * 7 + diff, n, m, y]
+    sub                 // [n - 1, 7,diff > 6 * 7 + diff, n, m, y]
+    mul                 // [n - 1 * 7,diff > 6 * 7 + diff, n, m, y]
+    add                 // [n - 1 * 7 + diff > 6 * 7 + diff, n, m, y]
+                        // [date, n, m, y]
+
+    swap1               // [n,date,m,y] 
+    iszero              // [n==0,date,m,y] 
+    iszero              // [((n==0)==0),date,m,y] 
+    0x20 mload          // [md,((n==0)==0),date,m,y] 
+    dup3                // [date, md,((n==0)==0),date,m,y] 
+    lt                  // [date < md,((n==0)==0),date,m,y] 
+    and                 // [date < md && ((n==0)==0),date,m,y] 
+    0x00 mload          // [d, date < md && ((n==0)==0),date,m,y] 
+    dup3                // [date, d, date < md && ((n==0)==0),date,m,y]
+    add                 // [date + d, date < md && ((n==0)==0),date,m,y]
+    0x15180             // [86400, date + d, date < md && ((n==0)==0),date,m,y]
+    mul                 // [86400 * date + d, date < md && ((n==0)==0),date,m,y]
+    mul                 // [86400 * date + d * date < md && ((n==0)==0),date,m,y]
+
+    // clear stack
+    swap3 
+    pop
+    pop
+    pop
+     
+    // Return stack:    // [result]
+ }

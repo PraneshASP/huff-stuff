@@ -7,6 +7,7 @@
 #define function daysInMonth(uint256,uint256) nonpayable returns (uint256)
 #define function dateToEpochDay(uint256,uint256,uint256) nonpayable returns (uint256)
 #define function dateToTimestamp(uint256,uint256,uint256) nonpayable returns (uint256)
+#define function nthWeekdayInMonthOfYearTimestamp(uint256, uint256,uint256,uint256) nonpayable returns (uint256)
 
 /* Wrapper Macros */
 #define macro WEEKDAY_WRAPPER() = takes (0) returns (0) {
@@ -49,6 +50,16 @@
     0x20 0x00 return     // []  
  }
 
+ #define macro NTH_WEEKDAY_IN_MONTH_OF_YEAR_TIMESTAMP_WRAPPER() = takes (0) returns (0) {
+    0x04 calldataload    // [year]
+    0x24 calldataload    // [month, year]
+    0x44 calldataload    // [n, month, year]
+    0x64 calldataload    // [wd, n, month, year]
+    NTH_WEEKDAY_IN_MONTH_OF_YEAR_TIMESTAMP()  // [result]
+    0x00 mstore          // []
+    0x20 0x00 return     // []  
+ }
+
 /* Function Dispatcher */
 #define macro MAIN() = takes (0) returns (0) {
     // Identify which function is being called.
@@ -63,6 +74,7 @@
     dup1 __FUNC_SIG(daysInMonth) eq daysInMonth   jumpi
     dup1 __FUNC_SIG(dateToEpochDay) eq dateToEpochDay   jumpi
     dup1 __FUNC_SIG(dateToTimestamp) eq dateToTimestamp   jumpi
+    dup1 __FUNC_SIG(nthWeekdayInMonthOfYearTimestamp) eq nthWeekdayInMonthOfYearTimestamp   jumpi
 
 
     weekday:
@@ -79,6 +91,9 @@
 
     dateToTimestamp:
         DATE_TO_TIMESTAMP_WRAPPER()
+
+    nthWeekdayInMonthOfYearTimestamp:
+        NTH_WEEKDAY_IN_MONTH_OF_YEAR_TIMESTAMP_WRAPPER()
 
 }
 
