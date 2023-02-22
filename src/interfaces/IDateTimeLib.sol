@@ -17,4 +17,10 @@ interface IDateTimeLib {
         uint256 month,
         uint256 day
     ) external view returns (uint256 result);
+
+    function dateToTimestamp(
+        uint256 year,
+        uint256 month,
+        uint256 day
+    ) external view returns (uint256 result);
 }

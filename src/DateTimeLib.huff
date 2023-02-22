@@ -141,3 +141,12 @@
 
     // Return stack:  // [result]
  }
+
+ #define macro DATE_TO_TIMESTAMP() = takes (0) returns (0)  {
+    // Input stack = [d, m, y]
+    DATE_TO_EPOCH_DAY() // [epochDay]
+    0x15180             // [86400,epochDay]
+    mul                 // [86400 * epochDay]
+
+    // Return stack:    // [timestamp]
+ }
