@@ -355,3 +355,15 @@
     GET_YEAR()      // [year, month, day, mp, doy, yoe, doe, epochDay]
 
  }                  
+
+  #define macro TIMESTAMP_TO_DATE() = takes(0) returns(0) {
+   // Imput stack:  [timestamp]
+
+   0x15180           // [86400, timestamp]
+   swap1
+   div               // [timestamp / 86400]
+
+   EPOCH_DAY_TO_DATE() // [year, month, day] 
+    
+   // Return stack:    [year, month, day]
+  }
