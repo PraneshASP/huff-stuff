@@ -2,12 +2,20 @@
 pragma solidity ^0.8.15;
 
 import "foundry-huff/HuffDeployer.sol";
-import "forge-std/Test.sol";
 import "forge-std/console.sol";
+import "forge-std/Test.sol";
 
 import {IDateTimeLib} from "../src/interfaces/IDateTimeLib.sol";
 
 contract DateTimeLibTest is Test {
+    struct DateTime {
+        uint256 year;
+        uint256 month;
+        uint256 day;
+        uint256 hour;
+        uint256 minute;
+        uint256 second;
+    }
     uint256 internal constant MON = 1;
     uint256 internal constant TUE = 2;
     uint256 internal constant WED = 3;
@@ -15,6 +23,28 @@ contract DateTimeLibTest is Test {
     uint256 internal constant FRI = 5;
     uint256 internal constant SAT = 6;
     uint256 internal constant SUN = 7;
+
+    // Months and days of months are 1-indexed for ease of use.
+
+    uint256 internal constant JAN = 1;
+    uint256 internal constant FEB = 2;
+    uint256 internal constant MAR = 3;
+    uint256 internal constant APR = 4;
+    uint256 internal constant MAY = 5;
+    uint256 internal constant JUN = 6;
+    uint256 internal constant JUL = 7;
+    uint256 internal constant AUG = 8;
+    uint256 internal constant SEP = 9;
+    uint256 internal constant OCT = 10;
+    uint256 internal constant NOV = 11;
+    uint256 internal constant DEC = 12;
+
+    // These limits are large enough for most practical purposes.
+    // Inputs that exceed these limits result in undefined behavior.
+
+    uint256 internal constant MAX_SUPPORTED_YEAR = 0xffffffff;
+    uint256 internal constant MAX_SUPPORTED_EPOCH_DAY = 0x16d3e098039;
+    uint256 internal constant MAX_SUPPORTED_TIMESTAMP = 0x1e18549868c76ff;
     /// @dev Address of the DateTimeLib contract.
     IDateTimeLib public sut;
 
@@ -165,5 +195,49 @@ contract DateTimeLibTest is Test {
         assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2023, 1, 4, wd), 1674345600);
         assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2023, 1, 5, wd), 1674950400);
         assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2023, 1, 6, wd), 0);
+    }
+
+    function testEpochDaysToDate() public {
+        DateTime memory d;
+        (d.year, d.month, d.day) = sut.epochDayToDate(0);
+        assertTrue(d.year == 1970 && d.month == 1 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(31);
+        assertTrue(d.year == 1970 && d.month == 2 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(59);
+        assertTrue(d.year == 1970 && d.month == 3 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(90);
+        assertTrue(d.year == 1970 && d.month == 4 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(120);
+        assertTrue(d.year == 1970 && d.month == 5 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(151);
+        assertTrue(d.year == 1970 && d.month == 6 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(181);
+        assertTrue(d.year == 1970 && d.month == 7 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(212);
+        assertTrue(d.year == 1970 && d.month == 8 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(243);
+        assertTrue(d.year == 1970 && d.month == 9 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(273);
+        assertTrue(d.year == 1970 && d.month == 10 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(304);
+        assertTrue(d.year == 1970 && d.month == 11 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(334);
+        assertTrue(d.year == 1970 && d.month == 12 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(365);
+        assertTrue(d.year == 1971 && d.month == 1 && d.day == 1);
+        (d.year, d.month, d.day) = sut.epochDayToDate(10987);
+        assertTrue(d.year == 2000 && d.month == 1 && d.day == 31);
+        (d.year, d.month, d.day) = sut.epochDayToDate(18321);
+        assertTrue(d.year == 2020 && d.month == 2 && d.day == 29);
+        (d.year, d.month, d.day) = sut.epochDayToDate(156468);
+        assertTrue(d.year == 2398 && d.month == 5 && d.day == 25);
+        (d.year, d.month, d.day) = sut.epochDayToDate(35805087);
+        assertTrue(d.year == 100000 && d.month == 12 && d.day == 31);
+    }
+
+    function testEpochDayToDate(uint256 epochDay) public {
+        DateTime memory d;
+        (d.year, d.month, d.day) = sut.epochDayToDate(epochDay);
+        assertEq(epochDay, sut.dateToEpochDay(d.year, d.month, d.day));
     }
 }
