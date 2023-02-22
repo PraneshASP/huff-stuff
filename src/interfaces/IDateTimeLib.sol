@@ -18,6 +18,15 @@ interface IDateTimeLib {
         uint256 day
     ) external view returns (uint256 result);
 
+    function epochDayToDate(uint256 epochDay)
+        external
+        view
+        returns (
+            uint256 year,
+            uint256 month,
+            uint256 day
+        );
+
     function dateToTimestamp(
         uint256 year,
         uint256 month,
