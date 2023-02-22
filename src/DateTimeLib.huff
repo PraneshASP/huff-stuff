@@ -144,6 +144,7 @@
 
  #define macro DATE_TO_TIMESTAMP() = takes (0) returns (0)  {
     // Input stack = [d, m, y]
+
     DATE_TO_EPOCH_DAY() // [epochDay]
     0x15180             // [86400,epochDay]
     mul                 // [86400 * epochDay]
@@ -214,3 +215,25 @@
      
     // Return stack:    // [result]
  }
+
+
+
+#define macro DATE_TIME_TO_TIMESTAMP() = takes(0) returns(0) {
+    // Input stack :  [day, month ,year ,hour,min,sec]
+
+    DATE_TO_EPOCH_DAY() // [epochDay, hour, min, sec]
+    0x15180            //  [86400,epochDay, hour, min, sec]
+    mul                //  [86400*epochDay, hour, min, sec] 
+    swap1              //  [hour, 86400*epochDay, min, sec] 
+    0xe10              //  [3600,hour, 86400*epochDay, min, sec] 
+    mul                //  [3600*hour, 86400*epochDay, min, sec]  
+    swap2              //  [min, 86400*epochDay, 3600*hour, sec] 
+    0x3c               //  [60,min, 86400*epochDay, 3600*hour, sec] 
+    mul                //  [60 * min, 86400*epochDay, 3600*hour, sec]
+    add                //  [60 * min + 86400*epochDay, 3600*hour, sec]
+    add                //  [60 * min + 86400*epochDay + 3600*hour, sec]
+    add                //  [60 * min + 86400*epochDay + 3600*hour + sec]
+
+    // Return stack:   [result]
+}
+ 
