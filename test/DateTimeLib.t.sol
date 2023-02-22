@@ -8,6 +8,13 @@ import "forge-std/console.sol";
 import {IDateTimeLib} from "../src/interfaces/IDateTimeLib.sol";
 
 contract DateTimeLibTest is Test {
+    uint256 internal constant MON = 1;
+    uint256 internal constant TUE = 2;
+    uint256 internal constant WED = 3;
+    uint256 internal constant THU = 4;
+    uint256 internal constant FRI = 5;
+    uint256 internal constant SAT = 6;
+    uint256 internal constant SUN = 7;
     /// @dev Address of the DateTimeLib contract.
     IDateTimeLib public sut;
 
@@ -119,5 +126,44 @@ contract DateTimeLibTest is Test {
         } else {
             assertEq(sut.daysInMonth(year, month), 30);
         }
+    }
+
+    // prettier-ignore
+    function testNthWeekdayInMonthOfYearTimestamp() public {
+        uint256 wd;
+        // 1st 2nd 3rd 4th monday in Novermber 2022.
+        wd = MON;
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 1, wd),1667779200);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 2, wd), 1668384000);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 3, wd), 1668988800);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 4, wd), 1669593600);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 5, wd), 0);
+
+        // 1st... 5th Wednesday in Novermber 2022.
+        wd = WED;
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 1, wd), 1667347200);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 2, wd), 1667952000);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 3, wd), 1668556800);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 4, wd), 1669161600);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 5, wd), 1669766400);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 6, wd), 0);
+
+        // 1st... 5th Friday in December 2022.
+        wd = FRI;
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 12, 1, wd), 1669939200);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 12, 2, wd), 1670544000);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 12, 3, wd), 1671148800);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 12, 4, wd), 1671753600);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 12, 5, wd), 1672358400);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 12, 6, wd), 0);
+
+        // 1st... 5th Sunday in January 2023.
+        wd = SUN;
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2023, 1, 1, wd), 1672531200);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2023, 1, 2, wd), 1673136000);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2023, 1, 3, wd), 1673740800);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2023, 1, 4, wd), 1674345600);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2023, 1, 5, wd), 1674950400);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2023, 1, 6, wd), 0);
     }
 }
