@@ -5,6 +5,7 @@
 #define function weekday(uint256) nonpayable returns (uint256)
 #define function isLeapYear(uint256) nonpayable returns (bool)
 #define function daysInMonth(uint256,uint256) nonpayable returns (uint256)
+#define function dateToEpochDay(uint256,uint256,uint256) nonpayable returns (uint256)
 
 /* Wrapper Macros */
 #define macro WEEKDAY_WRAPPER() = takes (0) returns (0) {
@@ -29,6 +30,14 @@
     0x20 0x00 return     // []  
  }
 
+#define macro DATE_TO_EPOCH_DAY_WRAPPER() = takes (0) returns (0) {
+    0x04 calldataload    // [year]
+    0x24 calldataload    // [month, year]
+    0x44 calldataload    // [day, month, year]
+    DATE_TO_EPOCH_DAY()  // [result]
+    0x00 mstore          // []
+    0x20 0x00 return     // []  
+ }
 
 /* Function Dispatcher */
 #define macro MAIN() = takes (0) returns (0) {
@@ -42,6 +51,7 @@
     dup1 __FUNC_SIG(weekday)    eq  weekday      jumpi
     dup1 __FUNC_SIG(isLeapYear) eq  isLeapYear   jumpi
     dup1 __FUNC_SIG(daysInMonth) eq daysInMonth   jumpi
+    dup1 __FUNC_SIG(dateToEpochDay) eq dateToEpochDay   jumpi
 
 
     weekday:
@@ -52,6 +62,9 @@
 
     daysInMonth:
         DAYS_IN_MONTH_WRAPPER()
+
+    dateToEpochDay:
+        DATE_TO_EPOCH_DAY_WRAPPER()
 
 
 }

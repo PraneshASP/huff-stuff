@@ -11,4 +11,10 @@ interface IDateTimeLib {
         external
         view
         returns (uint256 result);
+
+    function dateToEpochDay(
+        uint256 year,
+        uint256 month,
+        uint256 day
+    ) external view returns (uint256 result);
 }
