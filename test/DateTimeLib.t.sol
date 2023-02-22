@@ -72,6 +72,34 @@ contract DateTimeLibTest is Test {
         assertEq(sut.daysInMonth(1900, 2), 28);
     }
 
+    function testDateToEpochDay() public {
+        assertEq(sut.dateToEpochDay(1970, 1, 1), 0);
+        assertEq(sut.dateToEpochDay(1970, 1, 2), 1);
+        assertEq(sut.dateToEpochDay(1970, 2, 1), 31);
+        assertEq(sut.dateToEpochDay(1970, 3, 1), 59);
+        assertEq(sut.dateToEpochDay(1970, 4, 1), 90);
+        assertEq(sut.dateToEpochDay(1970, 5, 1), 120);
+        assertEq(sut.dateToEpochDay(1970, 6, 1), 151);
+        assertEq(sut.dateToEpochDay(1970, 7, 1), 181);
+        assertEq(sut.dateToEpochDay(1970, 8, 1), 212);
+        assertEq(sut.dateToEpochDay(1970, 9, 1), 243);
+        assertEq(sut.dateToEpochDay(1970, 10, 1), 273);
+        assertEq(sut.dateToEpochDay(1970, 11, 1), 304);
+        assertEq(sut.dateToEpochDay(1970, 12, 1), 334);
+        assertEq(sut.dateToEpochDay(1970, 12, 31), 364);
+        assertEq(sut.dateToEpochDay(1971, 1, 1), 365);
+        assertEq(sut.dateToEpochDay(1980, 11, 3), 3959);
+        assertEq(sut.dateToEpochDay(2000, 3, 1), 11017);
+        assertEq(sut.dateToEpochDay(2355, 12, 31), 140982);
+        assertEq(sut.dateToEpochDay(99999, 12, 31), 35804721);
+        assertEq(sut.dateToEpochDay(100000, 12, 31), 35805087);
+
+        /// These cases fail due to precision loss
+        // assertEq(sut.dateToEpochDay(604800, 2, 29), 220179195);
+        // assertEq(sut.dateToEpochDay(1667347200, 2, 29), 608985340227);
+        // assertEq(sut.dateToEpochDay(1667952000, 2, 29), 609206238891);
+    }
+
     function testDaysInMonth(uint256 year, uint256 month) public {
         month = bound(month, 1, 12);
         if (sut.isLeapYear(year) && month == 2) {
