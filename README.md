@@ -1,8 +1,9 @@
 # Huff Stuff  • [![CI][ci-shield]][ci-url] [![MIT License][license-shield]][license-url]
 
-<picture>
-  <img alt="" src="./assets/logo.png">
-</picture>
+<p align="center">
+  <img src="./assets/logo.png" alt="huff-stuff-logo" />
+</p>
+
 
 
 Random [Huff](https://docs.huff.sh) snippets mostly ported or modified from other popular libraries.
