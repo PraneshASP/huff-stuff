@@ -24,7 +24,7 @@ DateTimeLib — "Library for date time operations"
 
 ## Contributing
 
-This repository serves as a laboratory/playground for Huff contracts or snippets that may be merged into [Huffmate](https://github.com/pentagon-xyz/huffmate).
+This repository serves as a laboratory/playground for Huff contracts or snippets that may be merged into [Huffmate](https://github.com/pentagonxyz/huffmate).
 
 Feel free to make a pull request.
 
@@ -41,7 +41,7 @@ forge install PraneshASP/huff-stuff
 This repository is inspired by or directly modified from many sources, primarily:
 
 - [Solady](https://github.com/vectorized/solady)
-- [Huffmate](https://github.com/pentogon-xyz/huffmate)
+- [Huffmate](https://github.com/pentagonxyz/huffmate)
 
  
 
