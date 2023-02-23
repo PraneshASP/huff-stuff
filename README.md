@@ -28,8 +28,6 @@ This repository serves as a laboratory/playground for Huff contracts or snippets
 
 Feel free to make a pull request.
 
-Do refer to the [contribution guidelines](https://github.com/Vectorized/solady/issues/19) for more details.
-
 ## Safety
 
 This is **experimental software** and is provided on an "as is" and "as available" basis.
@@ -57,7 +55,7 @@ This repository is inspired by or directly modified from many sources, primarily
 
  
 
-[ci-shield]: https://img.shields.io/github/actions/workflow/status/PraneshASP/huff-stuff/ci.yml?branch=main&label=build
+[ci-shield]: https://github.com/PraneshASP/huff-stuff/actions/workflows/ci.yaml/badge.svg
 [ci-url]: https://github.com/PraneshASP/huff-stuff/actions/workflows/ci.yml
 
 [license-shield]: https://img.shields.io/badge/License-MIT-green.svg
