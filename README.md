@@ -58,5 +58,5 @@ This repository is inspired by or directly modified from many sources, primarily
 [ci-shield]: https://github.com/PraneshASP/huff-stuff/actions/workflows/ci.yaml/badge.svg
 [ci-url]: https://github.com/PraneshASP/huff-stuff/actions/workflows/ci.yml
 
-[license-shield]: https://img.shields.io/badge/License-MIT-green.svg
+[license-shield]: https://img.shields.io/badge/License-MIT-orange.svg
 [license-url]: https://github.com/PraneshASP/huff-stuff/blob/main/LICENSE
