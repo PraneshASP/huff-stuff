@@ -65,7 +65,7 @@ contract DateTimeLibTest is Test {
     }
 
     function testFuzzWeekday(uint256 timestamp) public {
-        timestamp = timestamp % 10**10;
+        timestamp = timestamp % 10 ** 10;
         uint256 weekday = ((timestamp / 86400 + 3) % 7) + 1;
         assertEq(weekday, sut.weekday(timestamp));
     }
@@ -130,11 +130,9 @@ contract DateTimeLibTest is Test {
         assertEq(sut.dateToEpochDay(2355, 12, 31), 140982);
         assertEq(sut.dateToEpochDay(99999, 12, 31), 35804721);
         assertEq(sut.dateToEpochDay(100000, 12, 31), 35805087);
-
-        /// These cases fail due to precision loss
-        // assertEq(sut.dateToEpochDay(604800, 2, 29), 220179195);
-        // assertEq(sut.dateToEpochDay(1667347200, 2, 29), 608985340227);
-        // assertEq(sut.dateToEpochDay(1667952000, 2, 29), 609206238891);
+        assertEq(sut.dateToEpochDay(604800, 2, 29), 220179195);
+        assertEq(sut.dateToEpochDay(1667347200, 2, 29), 608985340227);
+        assertEq(sut.dateToEpochDay(1667952000, 2, 29), 609206238891);
     }
 
     function testDaysInMonth(uint256 year, uint256 month) public {
