@@ -167,58 +167,54 @@
     dup4                // [m, y, wd, n, m, y]
     0x1                 // [1, m, y, wd, n, m, y]
     DATE_TO_EPOCH_DAY() // [d, wd, n, m, y]
-    0x00 mstore         // [wd, n, m, y]
+ 
+    dup5                // [y, d, wd, n, m, y]
+    dup5                // [m, y, d, wd, n, m, y]
+    DAYS_IN_MONTH()     // [md, d, wd, n, m, y]
+ 
+    0x1                 // [1, md, d, wd, n, m, y]
+    0x7                 // [7, 1, md, d, wd, n, m, y]
+    0x3                 // [3, 7, 1, md, d, wd, n, m, y]
+    dup5                // [d, 3, 7, 1, md, d, wd, n, m, y]
+    add                 // [d + 3, 7, 1, md, d, wd, n, m, y]
+    mod                 // [d + 3 % 7, 1, md, d, wd, n, m, y]
+    add                 // [d + 3 % 7 + 1, md, d, wd, n, m, y]
+    dup4                // [wd, d + 3 % 7 + 1, md, d, wd, n, m, y]
+    sub                 // [wd - d + 3 % 7 + 1, md, d, wd, n, m, y]
+                        // [diff, md, d, wd, n, m, y]           
 
-    dup4                // [y, wd, n, m, y]
-    dup4                // [m, y, wd, n, m, y]
-    DAYS_IN_MONTH()     // [md, wd, n, m, y]
-    0x20 mstore         // [wd, n, m, y]
-
-    0x1                 // [1, wd, n, m, y]
-    0x7                 // [7, 1, wd, n, m, y]
-    0x3                 // [3, 7, 1, wd, n, m, y]
-    0x00 mload          // [d, 3, 7, 1, wd, n, m, y]
-    add                 // [d + 3, 7, 1, wd, n, m, y]
-    mod                 // [d + 3 % 7, 1, wd, n, m, y]
-    add                 // [d + 3 % 7 + 1, wd, n, m, y]
-    swap1               // [wd, d + 3 % 7 + 1, n, m, y]
-    sub                 // [wd - d + 3 % 7 + 1, n, m, y]
-    0x40 mstore                    
-
-    0x40 mload          // [diff, n, m, y]
-    0x7                 // [7, diff, n, m, y]
-    0x6                 // [6,7, diff, n, m, y]
-    0x40 mload          // [diff,6,7, diff, n, m, y]
-    gt                  // [diff > 6, 7, diff, n, m, y]
-    mul                 // [diff > 6 * 7, diff, n, m, y]
-    add                 // [diff > 6 * 7 + diff, n, m, y]
-    0x7                 // [7,diff > 6 * 7 + diff, n, m, y]
-    0x1                 // [1, 7, diff > 6 * 7 + diff, n, m, y]
-    dup4                // [n, 1, 7,diff > 6 * 7 + diff, n, m, y]
-    sub                 // [n - 1, 7,diff > 6 * 7 + diff, n, m, y]
-    mul                 // [n - 1 * 7,diff > 6 * 7 + diff, n, m, y]
-    add                 // [n - 1 * 7 + diff > 6 * 7 + diff, n, m, y]
-                        // [date, n, m, y]
-
-    swap1               // [n,date,m,y] 
-    iszero              // [n==0,date,m,y] 
-    iszero              // [((n==0)==0),date,m,y] 
-    0x20 mload          // [md,((n==0)==0),date,m,y] 
-    dup3                // [date, md,((n==0)==0),date,m,y] 
-    lt                  // [date < md,((n==0)==0),date,m,y] 
-    and                 // [date < md && ((n==0)==0),date,m,y] 
-    0x00 mload          // [d, date < md && ((n==0)==0),date,m,y] 
-    dup3                // [date, d, date < md && ((n==0)==0),date,m,y]
-    add                 // [date + d, date < md && ((n==0)==0),date,m,y]
-    0x15180             // [86400, date + d, date < md && ((n==0)==0),date,m,y]
-    mul                 // [86400 * date + d, date < md && ((n==0)==0),date,m,y]
-    mul                 // [86400 * date + d * date < md && ((n==0)==0),date,m,y]
+    0x7                 // [7, diff, md, d, wd, n, m, y]
+    0x6                 // [6, 7, diff, md, d, wd, n, m, y]
+    dup3                // [diff, 6, 7, diff, md, d, wd, n, m, y]
+    gt                  // [diff > 6, 7, diff, md, d, wd, n, m, y]
+    mul                 // [diff > 6 * 7, diff, md, d, wd, n, m, y]
+    add                 // [diff > 6 * 7 + diff, md, d, wd, n, m, y]
+    0x7                 // [7,diff > 6 * 7 + diff, md, d, wd, n, m, y]
+    0x1                 // [1, 7, diff > 6 * 7 + diff, md, d, wd, n, m, y]
+    dup7                // [n, 1, 7,diff > 6 * 7 + diff, md, d, wd, n, m, y]
+    sub                 // [n - 1, 7,diff > 6 * 7 + diff, md, d, wd, n, m, y]
+    mul                 // [n - 1 * 7,diff > 6 * 7 + diff, md, d, wd, n, m, y]
+    add                 // [n - 1 * 7 + diff > 6 * 7 + diff, md, d, wd, n, m, y]
+                        // [date, md, d, wd, n, m, y]
+ 
+    swap4               // [n, md, d, wd, date, m, y]
+    iszero              // [n==0, md, d,wd, date, m, y]
+    iszero              // [((n==0)==0), md, d, wd, date, m, y]
+    swap1               // [md,((n==0)==0),d,wd, date,m,y] 
+    dup5                // [date, md,((n==0)==0),d,wd, date,m,y] 
+    lt                  // [date < md,((n==0)==0),d,wd,date,m,y] 
+    and                 // [date < md && ((n==0)==0),d,wd,date,m,y] 
+    swap1               // [d, date < md && ((n==0)==0),wd, date,m,y] 
+    dup4                // [date, d, date < md && ((n==0)==0),wd, date,m,y]
+    add                 // [date + d, date < md && ((n==0)==0),wd,date,m,y]
+    0x15180             // [86400, date + d, date < md && ((n==0)==0),wd,date,m,y]
+    mul                 // [86400 * date + d, date < md && ((n==0)==0),wd, date,m,y]
+    mul                 // [86400 * date + d * date < md && ((n==0)==0),wd,date,m,y]
 
     // clear stack
-    swap3 
-    pop
-    pop
-    pop
+    swap4 
+    pop pop
+    pop pop
      
     // Return stack:    // [result]
  }
