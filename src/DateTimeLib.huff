@@ -111,11 +111,12 @@
     add                 // [62719 * m + 9 % 12 + 769 >> 11 + d, y, m, d]
                         // [doy, y,m,d]
 
+    /// yoe construction
     0x190               // [400,doy,y,m,d]
     dup3                // [y,400, doy,y,m,d]
     mod                 // [y%400, doy, y, m,d] 
                         // [yoe, doy, y, m, d]
-
+    /// doe construction
     0x64                // [100, yoe, doy, y, m, d]
     dup2                // [yoe, 100, yoe, doy, y, m, d]
     div                 // [yoe / 100, yoe, doy, y, m, d]
@@ -139,7 +140,11 @@
     div                 // [y / 400, 146097, doe, 719469, yoe, doy, y, m, d]       
     mul                 // [y / 400 * 146097, doe, 719469, yoe, doy, y, m, d]   
     add                 // [y / 400 * 146097 + doe, 719469, yoe, doy, y, m, d]   
-    sub                 // [y / 400 * 146097 + doe - 719469, yoe, doy, y, m, d]    
+    sub                 // [y / 400 * 146097 + doe - 719469, yoe, doy, y, m, d]  
+ 
+   /// Clear stack
+    swap5
+    pop pop pop pop pop  
    
     // Return stack:  // [result]
  }
