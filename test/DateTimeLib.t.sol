@@ -267,6 +267,83 @@ contract DateTimeLibTest is Test {
         }
     }
 
+    function testDateToEpochDayGas() public {
+        unchecked {
+            uint256 sum;
+            for (uint256 i; i < 256; ++i) {
+                uint256 year = _bound(_random(), 1970, MAX_SUPPORTED_YEAR);
+                uint256 month = _bound(_random(), 1, 12);
+                uint256 md = sut.daysInMonth(year, month);
+                uint256 day = _bound(_random(), 1, md);
+                uint256 epochDay = sut.dateToEpochDay(year, month, day);
+                sum += epochDay;
+            }
+            assertTrue(sum != 0);
+        }
+    }
+
+    function testEpochDayToDateGas2() public {
+        unchecked {
+            uint256 sum;
+            for (uint256 i; i < 256; ++i) {
+                uint256 epochDay = _bound(
+                    _random(),
+                    0,
+                    MAX_SUPPORTED_EPOCH_DAY
+                );
+                (
+                    uint256 year,
+                    uint256 month,
+                    uint256 day
+                ) = _epochDayToDateOriginal2(epochDay);
+                sum += year + month + day;
+            }
+            assertTrue(sum != 0);
+        }
+    }
+
+    function testDateToEpochDayDifferential(DateTime memory d) public {
+        d.year = _bound(d.year, 1970, MAX_SUPPORTED_YEAR);
+        d.month = _bound(d.month, 1, 12);
+        d.day = _bound(d.day, 1, sut.daysInMonth(d.year, d.month));
+        uint256 expectedResult = _dateToEpochDayOriginal(
+            d.year,
+            d.month,
+            d.day
+        );
+        assertEq(sut.dateToEpochDay(d.year, d.month, d.day), expectedResult);
+    }
+
+    function testDateToEpochDayDifferential2(DateTime memory d) public {
+        d.year = _bound(d.year, 1970, MAX_SUPPORTED_YEAR);
+        d.month = _bound(d.month, 1, 12);
+        d.day = _bound(d.day, 1, sut.daysInMonth(d.year, d.month));
+        uint256 expectedResult = _dateToEpochDayOriginal2(
+            d.year,
+            d.month,
+            d.day
+        );
+        assertEq(sut.dateToEpochDay(d.year, d.month, d.day), expectedResult);
+    }
+
+    function testEpochDayToDateDifferential(uint256 timestamp) public {
+        timestamp = _bound(timestamp, 0, MAX_SUPPORTED_TIMESTAMP);
+        DateTime memory a;
+        DateTime memory b;
+        (a.year, a.month, a.day) = _epochDayToDateOriginal(timestamp);
+        (b.year, b.month, b.day) = sut.epochDayToDate(timestamp);
+        assertTrue(a.year == b.year && a.month == b.month && a.day == b.day);
+    }
+
+    function testEpochDayToDateDifferential2(uint256 timestamp) public {
+        timestamp = _bound(timestamp, 0, MAX_SUPPORTED_TIMESTAMP);
+        DateTime memory a;
+        DateTime memory b;
+        (a.year, a.month, a.day) = _epochDayToDateOriginal2(timestamp);
+        (b.year, b.month, b.day) = sut.epochDayToDate(timestamp);
+        assertTrue(a.year == b.year && a.month == b.month && a.day == b.day);
+    }
+
     function _random() internal returns (uint256 r) {
         /// @solidity memory-safe-assembly
         assembly {
@@ -399,6 +476,90 @@ contract DateTimeLibTest is Test {
                 result := add(sub(max, r), 1)
                 break
             }
+        }
+    }
+
+    function _dateToEpochDayOriginal(
+        uint256 year,
+        uint256 month,
+        uint256 day
+    ) internal pure returns (uint256) {
+        unchecked {
+            if (month <= 2) {
+                year -= 1;
+            }
+            uint256 era = year / 400;
+            uint256 yoe = year - era * 400;
+            uint256 doy = (153 * (month > 2 ? month - 3 : month + 9) + 2) /
+                5 +
+                day -
+                1;
+            uint256 doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+            return era * 146097 + doe - 719468;
+        }
+    }
+
+    function _dateToEpochDayOriginal2(
+        uint256 year,
+        uint256 month,
+        uint256 day
+    ) internal pure returns (uint256 _days) {
+        unchecked {
+            int256 _year = int256(year);
+            int256 _month = int256(month);
+            int256 _day = int256(day);
+
+            int256 _m = (_month - 14) / 12;
+            int256 __days = _day -
+                32075 +
+                ((1461 * (_year + 4800 + _m)) / 4) +
+                ((367 * (_month - 2 - _m * 12)) / 12) -
+                ((3 * ((_year + 4900 + _m) / 100)) / 4) -
+                2440588;
+
+            _days = uint256(__days);
+        }
+    }
+
+    function _epochDayToDateOriginal(
+        uint256 timestamp
+    ) internal pure returns (uint256 year, uint256 month, uint256 day) {
+        unchecked {
+            timestamp += 719468;
+            uint256 era = timestamp / 146097;
+            uint256 doe = timestamp - era * 146097;
+            uint256 yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+            year = yoe + era * 400;
+            uint256 doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+            uint256 mp = (5 * doy + 2) / 153;
+            day = doy - (153 * mp + 2) / 5 + 1;
+            month = mp < 10 ? mp + 3 : mp - 9;
+            if (month <= 2) {
+                year += 1;
+            }
+        }
+    }
+
+    function _epochDayToDateOriginal2(
+        uint256 _days
+    ) internal pure returns (uint256 year, uint256 month, uint256 day) {
+        unchecked {
+            int256 __days = int256(_days);
+
+            int256 L = __days + 68569 + 2440588;
+            int256 N = (4 * L) / 146097;
+            L = L - (146097 * N + 3) / 4;
+            int256 _year = (4000 * (L + 1)) / 1461001;
+            L = L - (1461 * _year) / 4 + 31;
+            int256 _month = (80 * L) / 2447;
+            int256 _day = L - (2447 * _month) / 80;
+            L = _month / 11;
+            _month = _month + 2 - 12 * L;
+            _year = 100 * (N - 49) + _year + L;
+
+            year = uint256(_year);
+            month = uint256(_month);
+            day = uint256(_day);
         }
     }
 }

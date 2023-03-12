@@ -18,7 +18,7 @@
 /// All timestamps of days are rounded down to 00:00:00 UTC.
 
 ////////////////////////////////////////////////////////////////
-//                         Logic Macros                       //
+//                         Logic                              //
 ////////////////////////////////////////////////////////////////
 
 /// @dev Returns day of the week (Monday is indicated as 1 and so on) 
