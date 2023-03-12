@@ -1,4 +1,25 @@
-/* Methods */
+/// @title DateTimeLib
+/// @notice SPDX-License-Identifier: MIT
+/// @author PraneshASP <https://github.com/PraneshASP>
+/// @notice Library for date time operations.
+/// @notice Adapted from Solady (https://github.com/Vectorized/solady/blob/main/src/utils/DateTimeLib.so)
+
+/// Conventions:
+/// --------------------------------------------------------------------+
+/// Unit      | Range                | Notes                            |
+/// --------------------------------------------------------------------|
+/// timestamp | 0..0x1e18549868c76ff | Unix timestamp.                  |
+/// epochDay  | 0..0x16d3e098039     | Days since 1970-01-01.           |
+/// year      | 1970..0xffffffff     | Gregorian calendar year.         |
+/// month     | 1..12                | Gregorian calendar month.        |
+/// day       | 1..31                | Gregorian calendar day of month. |
+/// weekday   | 1..7                 | The day of the week (1-indexed). |
+/// --------------------------------------------------------------------+
+/// All timestamps of days are rounded down to 00:00:00 UTC.
+
+////////////////////////////////////////////////////////////////
+//                         Logic Macros                       //
+////////////////////////////////////////////////////////////////
 
 /// @dev Returns day of the week (Monday is indicated as 1 and so on) 
 #define macro WEEKDAY() = takes (0) returns (0) {
