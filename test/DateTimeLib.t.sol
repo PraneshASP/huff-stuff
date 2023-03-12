@@ -344,6 +344,10 @@ contract DateTimeLibTest is Test {
         assertTrue(a.year == b.year && a.month == b.month && a.day == b.day);
     }
 
+    ////////////////////////////////////////////////////////////////
+    //               Internal methods / Helpers                   //
+    ////////////////////////////////////////////////////////////////
+
     function _random() internal returns (uint256 r) {
         /// @solidity memory-safe-assembly
         assembly {
