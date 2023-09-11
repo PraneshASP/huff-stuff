@@ -1,0 +1,67 @@
+/// @title ERC6909
+/// @notice SPDX-License-Identifier: MIT
+/// @author PraneshASP <https://github.com/PraneshASP>
+/// @notice Minimal, gas efficient ERC 6909 implementation
+/// @notice Reference implemenatation: https://github.com/jtriley-eth/ERC-6909/blob/main/src/ERC6909.sol
+
+
+#include "../lib/huffmate/src/auth/NonPayable.huff"
+#include "../lib/huffmate/src/data-structures/Hashmap.huff"
+
+// Function Interface
+#define function totalSupply(uint256 id) nonpayable returns (uint256 amount)
+#define function balanceOf(address owner, uint256 id) nonpayable returns (uint256 amount)
+#define function isOperator(address owner, address spender) nonpayable returns (bool approved)
+#define function allowance(address owner, address spender, uint256 id) nonpayable returns (uint256 amount)
+
+#define function setOperator(address spender, bool approved) nonpayable returns (bool)
+#define function transfer(address receiver, uint256 id, uint256 amount) payable returns (bool)
+#define function approve(address spender, uint256 id, uint256 amount) nonpayable returns (bool)
+#define function transferFrom(address sender, address receiver, uint256 id, uint256 amount) payable returns (bool)
+
+// Events
+#define event Approval(address indexed owner, address indexed spender, uint256 indexed id, uint256 amount)
+#define event OperatorSet(address indexed owner, address indexed spender, bool approved)
+#define event Transfer(address indexed sender, address indexed receiver, uint256 indexed id, uint256 amount)
+
+// Storage Slots
+#define constant SUPPLY_LOCATION = FREE_STORAGE_POINTER()
+#define constant BALANCE_LOCATION = FREE_STORAGE_POINTER()
+#define constant OPERATOR_LOCATION = FREE_STORAGE_POINTER()
+#define constant IS_APPROVED_FOR_ALL_LOCATION = FREE_STORAGE_POINTER()
+
+// Viewable Function Macros
+
+/// @title Balance Of 
+/// @notice Gets the balance of the token id for the given address
+/// @param {calldata} [address owner, uint256 tokenId]
+/// @return {return} [uint256 balance]
+#define macro BALANCE_OF() = takes (0) returns (0) {
+     // input stack: [owner, tokenId]
+    [BALANCE_LOCATION]                              // [BALANCE_LOCATION, account, tokenId]
+    LOAD_ELEMENT_FROM_KEYS_2D(push0)                 // [balance]
+}
+
+
+/// @title Supports Interface
+/// @notice Returns the supported ERC165 interface
+/// @param {calldata} [bytes4 interfaceId]
+/// @return [bool]
+#define macro SUPPORTS_INTERFACE() = takes (0) returns(0) {
+    0x04 calldataload
+    dup1 0x01ffc9a7 eq isTrue jumpi
+    dup1 0xd9b67a26 eq isTrue jumpi
+    dup1 0x0e89341c eq isTrue jumpi
+    
+    push0
+
+    push0 dup1 mstore
+    0x20 push0 return
+
+    isTrue:
+        0x01 0x20 mstore
+        0x20 push0 return
+}
+
+  
+

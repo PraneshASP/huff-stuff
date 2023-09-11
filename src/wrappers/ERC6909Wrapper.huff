@@ -1,0 +1,69 @@
+/* Imports */
+#include '../ERC6909.huff'
+#include '../../lib/huffmate/src/math/SafeMath.huff'
+#include "../../lib/huffmate/src/utils/CommonErrors.huff"
+
+#define function mint(address account, uint256 tokenId, uint256 amount, bytes data) payable returns()
+
+/* Wrapper Macros */
+#define macro BALANCE_OF_WRAPPER() = takes (0) returns (0) {
+    0x24 calldataload                            // [tokenId]
+    0x04 calldataload                            // [account, tokenId]
+
+    BALANCE_OF()                                 // [balance]
+    0x00 mstore                                  // [] store into mem
+    0x20 0x00 return                             // [] return 32 bytes
+ }
+
+
+/// @title Mint (helper method)
+/// @notice Mint a token to the given account
+/// @notice This method does NOT validate caller. 
+/// @notice Increase the balance of the msg.sender for the given tokenId and amount.
+/// @param {calldata} [uint256 account, uint256 tokenId, uint256 amount, bytes data]
+/// @return []
+#define macro MINT_WRAPPER() = takes (0) returns (0) {
+    // increase the balance of the address
+    0x44 calldataload               // [amount]
+    0x24 calldataload               // [tokenId, amount]
+    0x04 calldataload               // [to, tokenId, amount]
+
+    // Increase the balance of the to account
+    [BALANCE_LOCATION]              // [&balance, to, tokenId, amount]
+    GET_SLOT_FROM_KEYS_2D(0x00)     // [slot, amount]
+    dup1                            // [slot, slot,amount]
+    sload                           // [bal, slot, amount]
+    swap1                           // [slot, bal, amount]
+    swap2                           // [amount, bal, slot]
+    // calc and store new sender balance // Safe sub balance to revert on underflow
+    SAFE_ADD()                      // [(bal+amount), slot]
+
+    // Store decreased balance
+    swap1                           // [slot, (bal+amount)]
+    sstore                          // []
+}
+
+
+/* Function Dispatcher */
+#define macro MAIN() = takes (0) returns (0) {
+    // Identify which function is being called.
+    0x00 calldataload 
+    
+    // Extract the function singature
+    0xe0 shr
+
+    // Jump table
+    dup1 __FUNC_SIG(balanceOf)    eq  balanceOf      jumpi
+    dup1 __FUNC_SIG(mint)         eq  mint           jumpi
+
+
+    0x00 0x00 revert
+
+    balanceOf:
+        BALANCE_OF_WRAPPER()
+
+    mint:
+        MINT_WRAPPER()
+}
+
+
