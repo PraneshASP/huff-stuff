@@ -16,6 +16,7 @@ contract DateTimeLibTest is Test {
         uint256 minute;
         uint256 second;
     }
+
     uint256 internal constant MON = 1;
     uint256 internal constant TUE = 2;
     uint256 internal constant WED = 3;
@@ -85,10 +86,7 @@ contract DateTimeLibTest is Test {
     }
 
     function testFuzzIsLeapYear(uint256 year) public {
-        assertEq(
-            sut.isLeapYear(year),
-            (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0)
-        );
+        assertEq(sut.isLeapYear(year), (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0));
     }
 
     function testDaysInMonth() public {
@@ -139,15 +137,7 @@ contract DateTimeLibTest is Test {
         month = bound(month, 1, 12);
         if (sut.isLeapYear(year) && month == 2) {
             assertEq(sut.daysInMonth(year, month), 29);
-        } else if (
-            month == 1 ||
-            month == 3 ||
-            month == 5 ||
-            month == 7 ||
-            month == 8 ||
-            month == 10 ||
-            month == 12
-        ) {
+        } else if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) {
             assertEq(sut.daysInMonth(year, month), 31);
         } else if (month == 2) {
             assertEq(sut.daysInMonth(year, month), 28);
@@ -161,7 +151,7 @@ contract DateTimeLibTest is Test {
         uint256 wd;
         // 1st 2nd 3rd 4th monday in Novermber 2022.
         wd = MON;
-        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 1, wd),1667779200);
+        assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 1, wd), 1667779200);
         assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 2, wd), 1668384000);
         assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 3, wd), 1668988800);
         assertEq(sut.nthWeekdayInMonthOfYearTimestamp(2022, 11, 4, wd), 1669593600);
@@ -237,11 +227,7 @@ contract DateTimeLibTest is Test {
         // TODO: Need to check why it randomly fails on certain inputs
         DateTime memory d;
         (d.year, d.month, d.day) = sut.epochDayToDate(epochDay);
-        assertEq(
-            epochDay,
-            sut.dateToEpochDay(d.year, d.month, d.day),
-            "ValidateEpochDay"
-        );
+        assertEq(epochDay, sut.dateToEpochDay(d.year, d.month, d.day), "ValidateEpochDay");
     }
 
     function testDateToAndFroTimestamp() public {
@@ -252,13 +238,8 @@ contract DateTimeLibTest is Test {
                 uint256 md = sut.daysInMonth(year, month);
                 uint256 day = _bound(_random(), 1, md);
                 uint256 timestamp = sut.dateToTimestamp(year, month, day);
-                assertEq(
-                    timestamp,
-                    sut.dateToEpochDay(year, month, day) * 86400
-                );
-                (uint256 y, uint256 m, uint256 d) = sut.timestampToDate(
-                    timestamp
-                );
+                assertEq(timestamp, sut.dateToEpochDay(year, month, day) * 86400);
+                (uint256 y, uint256 m, uint256 d) = sut.timestampToDate(timestamp);
 
                 assertEq(year, y, "year");
                 assertEq(month, m, "month");
@@ -286,16 +267,8 @@ contract DateTimeLibTest is Test {
         unchecked {
             uint256 sum;
             for (uint256 i; i < 256; ++i) {
-                uint256 epochDay = _bound(
-                    _random(),
-                    0,
-                    MAX_SUPPORTED_EPOCH_DAY
-                );
-                (
-                    uint256 year,
-                    uint256 month,
-                    uint256 day
-                ) = _epochDayToDateOriginal2(epochDay);
+                uint256 epochDay = _bound(_random(), 0, MAX_SUPPORTED_EPOCH_DAY);
+                (uint256 year, uint256 month, uint256 day) = _epochDayToDateOriginal2(epochDay);
                 sum += year + month + day;
             }
             assertTrue(sum != 0);
@@ -306,11 +279,7 @@ contract DateTimeLibTest is Test {
         d.year = _bound(d.year, 1970, MAX_SUPPORTED_YEAR);
         d.month = _bound(d.month, 1, 12);
         d.day = _bound(d.day, 1, sut.daysInMonth(d.year, d.month));
-        uint256 expectedResult = _dateToEpochDayOriginal(
-            d.year,
-            d.month,
-            d.day
-        );
+        uint256 expectedResult = _dateToEpochDayOriginal(d.year, d.month, d.day);
         assertEq(sut.dateToEpochDay(d.year, d.month, d.day), expectedResult);
     }
 
@@ -318,11 +287,7 @@ contract DateTimeLibTest is Test {
         d.year = _bound(d.year, 1970, MAX_SUPPORTED_YEAR);
         d.month = _bound(d.month, 1, 12);
         d.day = _bound(d.day, 1, sut.daysInMonth(d.year, d.month));
-        uint256 expectedResult = _dateToEpochDayOriginal2(
-            d.year,
-            d.month,
-            d.day
-        );
+        uint256 expectedResult = _dateToEpochDayOriginal2(d.year, d.month, d.day);
         assertEq(sut.dateToEpochDay(d.year, d.month, d.day), expectedResult);
     }
 
@@ -352,9 +317,7 @@ contract DateTimeLibTest is Test {
         /// @solidity memory-safe-assembly
         assembly {
             // This is the keccak256 of a very long string I randomly mashed on my keyboard.
-            let
-                sSlot
-            := 0xd715531fe383f818c5f158c342925dcf01b954d24678ada4d07c36af0f20e1ee
+            let sSlot := 0xd715531fe383f818c5f158c342925dcf01b954d24678ada4d07c36af0f20e1ee
             let sValue := sload(sSlot)
 
             mstore(0x20, sValue)
@@ -370,11 +333,7 @@ contract DateTimeLibTest is Test {
             sstore(sSlot, add(r, 1))
 
             // Do some biased sampling for more robust tests.
-            for {
-
-            } 1 {
-
-            } {
+            for {} 1 {} {
                 let d := byte(0, r)
                 // With a 1/256 chance, randomly set `r` to any of 0,1,2.
                 if iszero(d) {
@@ -384,34 +343,19 @@ contract DateTimeLibTest is Test {
                 // With a 1/2 chance, set `r` to near a random power of 2.
                 if iszero(and(2, d)) {
                     // Set `t` either `not(0)` or `xor(sValue, r)`.
-                    let t := xor(
-                        not(0),
-                        mul(iszero(and(4, d)), not(xor(sValue, r)))
-                    )
+                    let t := xor(not(0), mul(iszero(and(4, d)), not(xor(sValue, r))))
                     // Set `r` to `t` shifted left or right by a random multiple of 8.
                     switch and(8, d)
                     case 0 {
-                        if iszero(and(16, d)) {
-                            t := 1
-                        }
-                        r := add(
-                            shl(shl(3, and(byte(3, r), 31)), t),
-                            sub(and(r, 7), 3)
-                        )
+                        if iszero(and(16, d)) { t := 1 }
+                        r := add(shl(shl(3, and(byte(3, r), 31)), t), sub(and(r, 7), 3))
                     }
                     default {
-                        if iszero(and(16, d)) {
-                            t := shl(255, 1)
-                        }
-                        r := add(
-                            shr(shl(3, and(byte(3, r), 31)), t),
-                            sub(and(r, 7), 3)
-                        )
+                        if iszero(and(16, d)) { t := shl(255, 1) }
+                        r := add(shr(shl(3, and(byte(3, r), 31)), t), sub(and(r, 7), 3))
                     }
                     // With a 1/2 chance, negate `r`.
-                    if iszero(and(32, d)) {
-                        r := not(r)
-                    }
+                    if iszero(and(32, d)) { r := not(r) }
                     break
                 }
                 // Otherwise, just set `r` to `xor(sValue, r)`.
@@ -421,23 +365,12 @@ contract DateTimeLibTest is Test {
         }
     }
 
-    function _bound(
-        uint256 x,
-        uint256 min,
-        uint256 max
-    ) internal pure virtual override returns (uint256 result) {
-        require(
-            min <= max,
-            "_bound(uint256,uint256,uint256): Max is less than min."
-        );
+    function _bound(uint256 x, uint256 min, uint256 max) internal pure virtual override returns (uint256 result) {
+        require(min <= max, "_bound(uint256,uint256,uint256): Max is less than min.");
 
         /// @solidity memory-safe-assembly
         assembly {
-            for {
-
-            } 1 {
-
-            } {
+            for {} 1 {} {
                 // If `x` is between `min` and `max`, return `x` directly.
                 // This is to ensure that dictionary values
                 // do not get shifted if the min is nonzero.
@@ -483,51 +416,38 @@ contract DateTimeLibTest is Test {
         }
     }
 
-    function _dateToEpochDayOriginal(
-        uint256 year,
-        uint256 month,
-        uint256 day
-    ) internal pure returns (uint256) {
+    function _dateToEpochDayOriginal(uint256 year, uint256 month, uint256 day) internal pure returns (uint256) {
         unchecked {
             if (month <= 2) {
                 year -= 1;
             }
             uint256 era = year / 400;
             uint256 yoe = year - era * 400;
-            uint256 doy = (153 * (month > 2 ? month - 3 : month + 9) + 2) /
-                5 +
-                day -
-                1;
+            uint256 doy = (153 * (month > 2 ? month - 3 : month + 9) + 2) / 5 + day - 1;
             uint256 doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
             return era * 146097 + doe - 719468;
         }
     }
 
-    function _dateToEpochDayOriginal2(
-        uint256 year,
-        uint256 month,
-        uint256 day
-    ) internal pure returns (uint256 _days) {
+    function _dateToEpochDayOriginal2(uint256 year, uint256 month, uint256 day) internal pure returns (uint256 _days) {
         unchecked {
             int256 _year = int256(year);
             int256 _month = int256(month);
             int256 _day = int256(day);
 
             int256 _m = (_month - 14) / 12;
-            int256 __days = _day -
-                32075 +
-                ((1461 * (_year + 4800 + _m)) / 4) +
-                ((367 * (_month - 2 - _m * 12)) / 12) -
-                ((3 * ((_year + 4900 + _m) / 100)) / 4) -
-                2440588;
+            int256 __days = _day - 32075 + ((1461 * (_year + 4800 + _m)) / 4) + ((367 * (_month - 2 - _m * 12)) / 12)
+                - ((3 * ((_year + 4900 + _m) / 100)) / 4) - 2440588;
 
             _days = uint256(__days);
         }
     }
 
-    function _epochDayToDateOriginal(
-        uint256 timestamp
-    ) internal pure returns (uint256 year, uint256 month, uint256 day) {
+    function _epochDayToDateOriginal(uint256 timestamp)
+        internal
+        pure
+        returns (uint256 year, uint256 month, uint256 day)
+    {
         unchecked {
             timestamp += 719468;
             uint256 era = timestamp / 146097;
@@ -544,9 +464,7 @@ contract DateTimeLibTest is Test {
         }
     }
 
-    function _epochDayToDateOriginal2(
-        uint256 _days
-    ) internal pure returns (uint256 year, uint256 month, uint256 day) {
+    function _epochDayToDateOriginal2(uint256 _days) internal pure returns (uint256 year, uint256 month, uint256 day) {
         unchecked {
             int256 __days = int256(_days);
 
