@@ -35,10 +35,9 @@
     sload                           // [bal, slot, amount]
     swap1                           // [slot, bal, amount]
     swap2                           // [amount, bal, slot]
-    // calc and store new sender balance // Safe sub balance to revert on underflow
+    // calc and store new balance 
     SAFE_ADD()                      // [(bal+amount), slot]
 
-    // Store decreased balance
     swap1                           // [slot, (bal+amount)]
     sstore                          // []
 }
