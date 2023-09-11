@@ -38,8 +38,18 @@
 /// @return {return} [uint256 balance]
 #define macro BALANCE_OF() = takes (0) returns (0) {
      // input stack: [owner, tokenId]
-    [BALANCE_LOCATION]                              // [BALANCE_LOCATION, account, tokenId]
-    LOAD_ELEMENT_FROM_KEYS_2D(push0)                 // [balance]
+    [BALANCE_LOCATION]                               // [BALANCE_LOCATION, account, tokenId]
+    LOAD_ELEMENT_FROM_KEYS_2D(0x00)                 // [balance]
+}
+
+/// @title Total supply 
+/// @notice Gets the total supply of the given token id
+/// @param {calldata} [uint256 tokenId]
+/// @return {return} [uint256 supply]
+#define macro TOTAL_SUPPLY() = takes (0) returns (0) {
+     // input stack: [tokenId]
+    [SUPPLY_LOCATION]                                // [SUPPLY_LOCATION, tokenId]
+    LOAD_ELEMENT(0x00)                               // [totalSupply]
 }
 
 

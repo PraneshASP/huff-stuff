@@ -11,10 +11,18 @@
     0x04 calldataload                            // [account, tokenId]
 
     BALANCE_OF()                                 // [balance]
-    0x00 mstore                                  // [] store into mem
-    0x20 0x00 return                             // [] return 32 bytes
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes
  }
 
+#define macro TOTAL_SUPPLY_WRAPPER() = takes (0) returns (0) {
+    0x04 calldataload                            // [tokenId]
+
+    TOTAL_SUPPLY()                               // [balance]
+
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes
+ }
 
 /// @title Mint (helper method)
 /// @notice Mint a token to the given account
@@ -30,7 +38,7 @@
 
     // Increase the balance of the to account
     [BALANCE_LOCATION]              // [&balance, to, tokenId, amount]
-    GET_SLOT_FROM_KEYS_2D(0x00)     // [slot, amount]
+    GET_SLOT_FROM_KEYS_2D(push0)    // [slot, amount]
     dup1                            // [slot, slot,amount]
     sload                           // [bal, slot, amount]
     swap1                           // [slot, bal, amount]
@@ -40,13 +48,27 @@
 
     swap1                           // [slot, (bal+amount)]
     sstore                          // []
+
+    0x24 calldataload              // [tokenId]
+    
+    // Increase total supply
+    [SUPPLY_LOCATION]               // [tokenId, &totalSupply]
+    GET_SLOT_FROM_KEY(push0)        // [slot]
+    dup1                            // [slot, slot]
+    sload                           // [totalSupply, slot]
+    0x44 calldataload               // [amount, totalSupply, slot]
+     // calc and store new supply 
+    SAFE_ADD()                      // [(totalSupply+amount), slot]
+
+    swap1                           // [slot, newTotalSupply]
+    sstore                          // []
 }
 
 
 /* Function Dispatcher */
 #define macro MAIN() = takes (0) returns (0) {
     // Identify which function is being called.
-    0x00 calldataload 
+    push0 calldataload 
     
     // Extract the function singature
     0xe0 shr
@@ -54,15 +76,19 @@
     // Jump table
     dup1 __FUNC_SIG(balanceOf)    eq  balanceOf      jumpi
     dup1 __FUNC_SIG(mint)         eq  mint           jumpi
+    dup1 __FUNC_SIG(totalSupply)  eq  totalSupply    jumpi
 
 
-    0x00 0x00 revert
+    push0 push0 revert
 
     balanceOf:
         BALANCE_OF_WRAPPER()
 
     mint:
         MINT_WRAPPER()
+    
+    totalSupply:
+        TOTAL_SUPPLY_WRAPPER()
 }
 
 
