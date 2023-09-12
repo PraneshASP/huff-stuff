@@ -10,6 +10,8 @@ contract DateTimeLibTest is Test {
     /// @dev Address of the ERC6909 contract.
     IERC6909 public sut;
 
+    address user1 = makeAddr("user1");
+
     event OperatorSet(address indexed owner, address indexed spender, uint256 approved);
 
     /// @dev Setup the testing environment.
@@ -18,7 +20,6 @@ contract DateTimeLibTest is Test {
     }
 
     function testMint() public {
-        address user1 = makeAddr("user");
         assertEq(sut.balanceOf(user1, 1), 0);
 
         _mint(user1, 1, 1);
@@ -27,16 +28,12 @@ contract DateTimeLibTest is Test {
     }
 
     function testTotalSupply() public {
-        address user1 = makeAddr("user");
-
         _mint(user1, 1, 1);
 
         assertEq(sut.totalSupply(1), 1);
     }
 
     function testSetOperator() public {
-        address user1 = makeAddr("user");
-
         vm.prank(address(this));
         sut.setOperator(user1, 1);
 
@@ -44,14 +41,12 @@ contract DateTimeLibTest is Test {
     }
 
     function testSetOperator_ShouldEmitEvent() public {
-        address user1 = makeAddr("user");
         vm.expectEmit(true, true, true, true);
         emit OperatorSet(address(this), user1, 1);
         sut.setOperator(user1, 1);
     }
 
     function testSetOperator_ShouldRevert_WhenApprovedGt1() public {
-        address user1 = makeAddr("user");
         vm.expectRevert();
         sut.setOperator(user1, 3);
     }
