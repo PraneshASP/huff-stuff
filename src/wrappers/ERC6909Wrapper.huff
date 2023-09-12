@@ -1,11 +1,11 @@
 /* Imports */
-#include '../ERC6909.huff'
-#include '../../lib/huffmate/src/math/SafeMath.huff'
+#include "../ERC6909.huff"
+#include "../../lib/huffmate/src/math/SafeMath.huff"
 #include "../../lib/huffmate/src/utils/CommonErrors.huff"
 
 #define function mint(address account, uint256 tokenId, uint256 amount, bytes data) payable returns()
 
-/* Wrapper Macros */
+ /* Wrapper Macros */
 #define macro BALANCE_OF_WRAPPER() = takes (0) returns (0) {
     0x24 calldataload                            // [tokenId]
     0x04 calldataload                            // [account, tokenId]
@@ -22,6 +22,32 @@
 
     push0 mstore                                 // [] store into mem
     0x20 push0 return                            // [] return 32 bytes
+ }
+
+ #define macro IS_OPERATOR_WRAPPER() = takes (0) returns (0) {
+    0x24 calldataload                            // [spender]
+    0x04 calldataload                            // [owner, spender]
+
+    IS_OPERATOR()                                // [isOperator]
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes
+ }
+
+
+ #define macro SET_OPERATOR_WRAPPER() = takes (0) returns (0) {
+    0x02                                        // [2]
+    0x24 calldataload                           // [approved, 2]
+    swap1                                       // [2,approved]
+    dup2 lt iszero end jumpi                    // [approved < 2, approved]
+    
+    0x04 calldataload                            // [spender, approved]
+    caller                                       // [msg.sender, spender, approved]
+    SET_OPERATOR()
+    stop
+
+    end:
+    0x00 0x00 revert
+
  }
 
 /// @title Mint (helper method)
@@ -77,6 +103,8 @@
     dup1 __FUNC_SIG(balanceOf)    eq  balanceOf      jumpi
     dup1 __FUNC_SIG(mint)         eq  mint           jumpi
     dup1 __FUNC_SIG(totalSupply)  eq  totalSupply    jumpi
+    dup1 __FUNC_SIG(isOperator)   eq  isOperator     jumpi
+    dup1 __FUNC_SIG(setOperator)  eq  setOperator    jumpi
 
 
     push0 push0 revert
@@ -89,6 +117,12 @@
     
     totalSupply:
         TOTAL_SUPPLY_WRAPPER()
+    
+    isOperator:
+        IS_OPERATOR_WRAPPER()
+
+    setOperator:
+        SET_OPERATOR_WRAPPER()
 }
 
 

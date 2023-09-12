@@ -76,5 +76,6 @@ interface IERC6909 is IERC165 {
     /// @notice Sets or removes a spender as an operator for the caller.
     /// @param spender The address of the spender.
     /// @param approved The approval status.
-    function setOperator(address spender, bool approved) external returns (bool);
+    /// @dev 0 is for false and 1 is for true
+    function setOperator(address spender, uint256 approved) external;
 }
