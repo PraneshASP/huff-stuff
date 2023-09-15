@@ -1,0 +1,192 @@
+/* Imports */
+#include "../ERC6909.huff"
+ 
+#define function mint(address account, uint256 tokenId, uint256 amount, bytes data) nonpayable returns()
+
+ /* Wrapper Macros */
+#define macro BALANCE_OF_WRAPPER() = takes (0) returns (0) {
+    0x24 calldataload                            // [tokenId]
+    0x04 calldataload                            // [account, tokenId]
+
+    BALANCE_OF()                                 // [balance]
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes
+ }
+
+#define macro TOTAL_SUPPLY_WRAPPER() = takes (0) returns (0) {
+    0x04 calldataload                            // [tokenId]
+
+    TOTAL_SUPPLY()                               // [balance]
+
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes
+ }
+
+ #define macro IS_OPERATOR_WRAPPER() = takes (0) returns (0) {
+    0x24 calldataload                            // [spender]
+    0x04 calldataload                            // [owner, spender]
+
+    IS_OPERATOR()                                // [isOperator]
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes
+ }
+
+
+ #define macro SET_OPERATOR_WRAPPER() = takes (0) returns (0) {
+    0x02                                        // [2]
+    0x24 calldataload                           // [approved, 2]
+    swap1                                       // [2,approved]
+    dup2 lt iszero end jumpi                    // [approved < 2, approved]
+    
+    0x04 calldataload                            // [spender, approved]
+    caller                                       // [msg.sender, spender, approved]
+    SET_OPERATOR()
+    stop
+
+    end:
+    0x00 0x00 revert
+ }
+
+  
+  #define macro ALLOWANCE_WRAPPER() = takes (0) returns (0) {
+    0x44 calldataload                            // [tokenId]
+    0x24 calldataload                            // [spender, tokenId]
+    0x04 calldataload                            // [owner, spender, tokenId]
+    ALLOWANCE()                                  // [allowance]
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes
+ }
+
+ #define macro APPROVE_WRAPPER() = takes (0) returns (0) {
+    0x44 calldataload                            // [amount]
+    0x24 calldataload                            // [tokenId, amount]
+    0x04 calldataload                            // [spender, tokenId, amount]
+    caller                                       // [msg.sender, spender, tokenId, amount]
+    APPROVE()
+    0x1                                          // [true]
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes  
+ }
+
+ #define macro TRANSFER_WRAPPER() = takes (0) returns (0) {
+    0x44 calldataload                            // [amount]
+    0x24 calldataload                            // [tokenId, amount]
+    0x04 calldataload                            // [receiver, tokenId, amount]
+    caller                                       // [msg.sender, receiver, tokenId, amount]
+    TRANSFER()
+    0x1                                          // [true]
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes  
+ }
+
+  #define macro TRANSFER_FROM_WRAPPER() = takes (0) returns (0) {
+    0x64 calldataload                            // [amount]
+    0x44 calldataload                            // [tokenId, amount]
+    0x24 calldataload                            // [to, tokenId, amount]
+    0x04 calldataload                            // [from, to, tokenId, amount]
+    caller                                       // [msg.sender, from, to, tokenId, amount]
+    TRANSFER_FROM()
+    0x1                                          // [true]
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes  
+ }
+
+/// @title Mint (helper method)
+/// @notice Mint a token to the given account
+/// @notice This method does NOT validate caller. 
+/// @notice Increase the balance of the msg.sender for the given tokenId and amount.
+/// @param {calldata} [uint256 account, uint256 tokenId, uint256 amount, bytes data]
+/// @return []
+#define macro MINT_WRAPPER() = takes (0) returns (0) {
+    // increase the balance of the address
+    0x44 calldataload               // [amount]
+    0x24 calldataload               // [tokenId, amount]
+    0x04 calldataload               // [to, tokenId, amount]
+
+    // Increase the balance of the to account
+    [BALANCE_LOCATION]              // [&balance, to, tokenId, amount]
+    GET_SLOT_FROM_KEYS_2D(push0)    // [slot, amount]
+    dup1                            // [slot, slot,amount]
+    sload                           // [bal, slot, amount]
+    swap1                           // [slot, bal, amount]
+    swap2                           // [amount, bal, slot]
+    // calc and store new balance 
+    SAFE_ADD()                      // [(bal+amount), slot]
+
+    swap1                           // [slot, (bal+amount)]
+    sstore                          // []
+
+    0x24 calldataload              // [tokenId]
+    
+    // Increase total supply
+    [SUPPLY_LOCATION]               // [tokenId, &totalSupply]
+    GET_SLOT_FROM_KEY(push0)        // [slot]
+    dup1                            // [slot, slot]
+    sload                           // [totalSupply, slot]
+    0x44 calldataload               // [amount, totalSupply, slot]
+     // calc and store new supply 
+    SAFE_ADD()                      // [(totalSupply+amount), slot]
+
+    swap1                           // [slot, newTotalSupply]
+    sstore                          // []
+}
+
+
+/* Function Dispatcher */
+#define macro MAIN() = takes (0) returns (0) {
+    // Identify which function is being called.
+    push0 calldataload 
+    
+    // Extract the function singature
+    0xe0 shr
+
+    // Jump table
+    dup1 __FUNC_SIG(balanceOf)    eq  balanceOf      jumpi
+    dup1 __FUNC_SIG(mint)         eq  mint           jumpi
+    dup1 __FUNC_SIG(totalSupply)  eq  totalSupply    jumpi
+    dup1 __FUNC_SIG(isOperator)   eq  isOperator     jumpi
+    dup1 __FUNC_SIG(setOperator)  eq  setOperator    jumpi
+    dup1 __FUNC_SIG(allowance)    eq  allowance      jumpi
+    dup1 __FUNC_SIG(approve)      eq  approve        jumpi
+    dup1 __FUNC_SIG(transfer)     eq  transfer       jumpi
+    dup1 __FUNC_SIG(transferFrom) eq  transferFrom   jumpi
+
+    dup1 __FUNC_SIG(supportsInterface) eq  supportsInterface   jumpi
+
+
+   no_match jump
+
+    balanceOf:
+        BALANCE_OF_WRAPPER()
+
+    mint:
+        MINT_WRAPPER()
+    
+    totalSupply:
+        TOTAL_SUPPLY_WRAPPER()
+    
+    isOperator:
+        IS_OPERATOR_WRAPPER()
+
+    setOperator:
+        SET_OPERATOR_WRAPPER()
+
+    allowance:
+        ALLOWANCE_WRAPPER()
+    
+    approve:
+        APPROVE_WRAPPER()
+ 
+    transfer:
+        TRANSFER_WRAPPER()
+
+    transferFrom:
+        TRANSFER_FROM_WRAPPER()
+
+    supportsInterface:
+        SUPPORTS_INTERFACE()
+
+    no_match:
+}
+
+
