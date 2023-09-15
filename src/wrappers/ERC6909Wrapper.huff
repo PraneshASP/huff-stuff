@@ -67,8 +67,18 @@
     APPROVE()
     0x1                                          // [true]
     push0 mstore                                 // [] store into mem
-    0x20 push0 return                            // [] return 32 bytes
-    
+    0x20 push0 return                            // [] return 32 bytes  
+ }
+
+ #define macro TRANSFER_WRAPPER() = takes (0) returns (0) {
+    0x44 calldataload                            // [amount]
+    0x24 calldataload                            // [tokenId, amount]
+    0x04 calldataload                            // [receiver, tokenId, amount]
+    caller                                       // [msg.sender, receiver, tokenId, amount]
+    TRANSFER()
+    0x1                                          // [true]
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes  
  }
 
 /// @title Mint (helper method)
@@ -128,6 +138,7 @@
     dup1 __FUNC_SIG(setOperator)  eq  setOperator    jumpi
     dup1 __FUNC_SIG(allowance)    eq  allowance      jumpi
     dup1 __FUNC_SIG(approve)      eq  approve        jumpi
+    dup1 __FUNC_SIG(transfer)     eq  transfer       jumpi
 
 
    no_match jump
@@ -152,7 +163,10 @@
     
     approve:
         APPROVE_WRAPPER()
-
+ 
+    transfer:
+        TRANSFER_WRAPPER()
+  
     no_match:
 }
 

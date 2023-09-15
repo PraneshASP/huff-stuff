@@ -2,11 +2,12 @@
 /// @notice SPDX-License-Identifier: MIT
 /// @author PraneshASP <https://github.com/PraneshASP>
 /// @notice Minimal, gas efficient ERC 6909 implementation
-/// @notice Reference implemenatation: https://github.com/jtriley-eth/ERC-6909/blob/main/src/ERC6909.sol
+/// @notice Reference implementation: https://github.com/jtriley-eth/ERC-6909/blob/main/src/ERC6909.sol
 
 
 #include "../lib/huffmate/src/auth/NonPayable.huff"
 #include "../lib/huffmate/src/data-structures/Hashmap.huff"
+#include "../lib/huffmate/src/math/SafeMath.huff"
 
 // Function Interface
 #define function totalSupply(uint256 id) nonpayable returns (uint256 amount)
@@ -117,7 +118,7 @@
 /// @title Approve
 /// @notice Grants allowance to the spender for given tokenId
 /// @param {calldata} [address spender, uint256 tokenId, uint256 amount]
-/// @return {return} []
+/// @return {return} [bool]
 #define macro APPROVE() = takes (0) returns (0) {
     // input stack: [msg.sender, spender, tokenId, amount]
     
@@ -131,4 +132,39 @@
     0x00 mstore                                     // [msg.sender, spender, tokenId, amount]
     __EVENT_HASH(Approval)                          // [sig, msg.sender, spender, tokenId, amount]
     0x20 0x00 log4                                  // [amount]        
+}
+
+/// @title Transfer
+/// @dev Performs token transfer to the recipient 
+/// @param {calldata} [address receiver, uint256 tokenId, uint256 amount]
+/// @return [bool]
+#define macro TRANSFER() = takes (0) returns (0) {
+    // input stack: [msg.sender, receiver, tokenId, amount]
+    dup3  dup2                                     // [msg.sender, tokenId, msg.sender, receiver, tokenId, amount]
+    BALANCE_OF()                                   // [balance, msg.sender, receiver, tokenId, amount]    
+    dup5                                           // [amount, balance, msg.sender, receiver, tokenId, amount]  
+    swap1                                          // [balance, amount, msg.sender, receiver, tokenId, amount]  
+   
+    // Using safe sub to revert on underflow 
+    SAFE_SUB()                                     // [balance - amount, msg.sender, receiver, tokenId, amount]   
+    dup4 dup3                                      // [msg.sender, tokenId, updatedBalance, msg.sender, receiver, tokenId, amount]     
+    [BALANCE_LOCATION]                             // [ref, msg.sender, tokenId, updatedBalance, msg.sender, receiver, tokenId, amount]     
+    GET_SLOT_FROM_KEYS_2D(push0)                   // [slot, updatedBalance, msg.sender, receiver, tokenId, amount]
+    sstore                                         // [msg.sender, receiver, tokenId, amount]
+
+    dup3  dup3                                     // [receiver, tokenId, msg.sender, receiver, tokenId, amount]
+    BALANCE_OF()                                   // [balance, msg.sender, receiver, tokenId, amount]    
+    dup5                                           // [amount, balance, msg.sender, receiver, tokenId, amount]     
+    // Using safe add to revert on overflow 
+    SAFE_ADD()                                     // [balance + amount, msg.sender, receiver, tokenId, amount]   
+    dup4 dup4                                      // [receiver, tokenId, updatedBalance, msg.sender, receiver, tokenId, amount]     
+    [BALANCE_LOCATION]                             // [ref, msg.sender, tokenId, updatedBalance, msg.sender, receiver, tokenId, amount]     
+    GET_SLOT_FROM_KEYS_2D(push0)                   // [slot, updatedBalance, msg.sender, receiver, tokenId, amount]
+    sstore                                         // [msg.sender, receiver, tokenId, amount]
+
+    // Store amount in mem 
+    dup4 push0 mstore                              // [msg.sender, receiver, tokenId, amount]
+
+     __EVENT_HASH(Transfer)                        // [sig, msg.sender, receiver, tokenId, amount]
+    0x20 0x00 log4                                 // [amount]  
 }
