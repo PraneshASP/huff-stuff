@@ -28,7 +28,7 @@
 #define constant SUPPLY_LOCATION = FREE_STORAGE_POINTER()
 #define constant BALANCE_LOCATION = FREE_STORAGE_POINTER()
 #define constant OPERATOR_LOCATION = FREE_STORAGE_POINTER()
-#define constant IS_APPROVED_FOR_ALL_LOCATION = FREE_STORAGE_POINTER()
+#define constant ALLOWANCE_LOCATION = FREE_STORAGE_POINTER()
 
 // Viewable Function Macros
 
@@ -60,6 +60,16 @@
      // input stack: [owner, spender]
     [OPERATOR_LOCATION]                             // [OPERATOR_LOCATION, owner, spender]
     LOAD_ELEMENT_FROM_KEYS_2D(push0)                 // [isOperator]
+}
+
+/// @title Allowance
+/// @notice Checks the allowance granted to the spender for the given tokenId
+/// @param {calldata} [address owner, address spender, uint256 tokenId]
+/// @return {return} [uint256 amount]
+#define macro ALLOWANCE() = takes (0) returns (0) {
+     // input stack: [owner, spender, tokenId]
+    [ALLOWANCE_LOCATION]                             // [ALLOWANCE_LOCATION, owner, spender, tokenId]
+    LOAD_ELEMENT_FROM_KEYS_3D(push0)                 // [allowance]
 }
 
 /// @title Supports Interface
@@ -104,4 +114,21 @@
 }
 
   
-
+/// @title Approve
+/// @notice Grants allowance to the spender for given tokenId
+/// @param {calldata} [address spender, uint256 tokenId, uint256 amount]
+/// @return {return} []
+#define macro APPROVE() = takes (0) returns (0) {
+    // input stack: [msg.sender, spender, tokenId, amount]
+    
+    // for event
+    dup4 dup4                                       // [tokenId, amount, msg.sender, spender, tokenId, amount]
+    dup4 dup4                                       // [ msg.sender, spender, tokenId, amount, msg.sender, spender, tokenId, amount]
+    [ALLOWANCE_LOCATION]                            // [ALLOWANCE_LOCATION, msg.sender, spender, tokenId, amount, msg.sender, spender, tokenId, amount]
+    STORE_ELEMENT_FROM_KEYS_3D(push0)               // [msg.sender, spender, tokenId, amount]
+    
+    dup4                                            // [amount, msg.sender, spender, tokenId, amount]
+    0x00 mstore                                     // [msg.sender, spender, tokenId, amount]
+    __EVENT_HASH(Approval)                          // [sig, msg.sender, spender, tokenId, amount]
+    0x20 0x00 log4                                  // [amount]        
+}
