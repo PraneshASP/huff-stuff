@@ -1,9 +1,7 @@
 /* Imports */
 #include "../ERC6909.huff"
-#include "../../lib/huffmate/src/math/SafeMath.huff"
-#include "../../lib/huffmate/src/utils/CommonErrors.huff"
-
-#define function mint(address account, uint256 tokenId, uint256 amount, bytes data) payable returns()
+ 
+#define function mint(address account, uint256 tokenId, uint256 amount, bytes data) nonpayable returns()
 
  /* Wrapper Macros */
 #define macro BALANCE_OF_WRAPPER() = takes (0) returns (0) {
@@ -187,7 +185,7 @@
 
     supportsInterface:
         SUPPORTS_INTERFACE()
-        
+
     no_match:
 }
 

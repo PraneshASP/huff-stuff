@@ -4,21 +4,21 @@
 /// @notice Minimal, gas efficient ERC 6909 implementation
 /// @notice Reference implementation: https://github.com/jtriley-eth/ERC-6909/blob/main/src/ERC6909.sol
 
-
-#include "../lib/huffmate/src/auth/NonPayable.huff"
+// Imports
 #include "../lib/huffmate/src/data-structures/Hashmap.huff"
 #include "../lib/huffmate/src/math/SafeMath.huff"
 
 // Function Interface
-#define function totalSupply(uint256 id) nonpayable returns (uint256 amount)
-#define function balanceOf(address owner, uint256 id) nonpayable returns (uint256 amount)
-#define function isOperator(address owner, address spender) nonpayable returns (bool approved)
-#define function allowance(address owner, address spender, uint256 id) nonpayable returns (uint256 amount)
-#define function supportsInterface(bytes4 interfaceId) nonpayable returns (bool supported)
+#define function totalSupply(uint256 id) view returns (uint256 amount)
+#define function balanceOf(address owner, uint256 id) view returns (uint256 amount)
+#define function isOperator(address owner, address spender) view returns (bool approved)
+#define function allowance(address owner, address spender, uint256 id) view returns (uint256 amount)
+#define function supportsInterface(bytes4 interfaceId) view returns (bool supported)
+
 #define function setOperator(address spender,uint256 approved) nonpayable returns ()
-#define function transfer(address receiver, uint256 id, uint256 amount) payable returns (bool)
+#define function transfer(address receiver, uint256 id, uint256 amount) nonpayable returns (bool)
 #define function approve(address spender, uint256 id, uint256 amount) nonpayable returns (bool)
-#define function transferFrom(address sender, address receiver, uint256 id, uint256 amount) payable returns (bool)
+#define function transferFrom(address sender, address receiver, uint256 id, uint256 amount) nonpayable returns (bool)
 
 // Events
 #define event Approval(address indexed owner, address indexed spender, uint256 indexed id, uint256 amount)
@@ -194,8 +194,8 @@
    
     dup5 dup3 dup5                                // [sender, msg.sender, tokenId, allowance-amount, msg.sender, sender, receiver, tokenId, amount] 
    
-    [ALLOWANCE_LOCATION]                           // [ALLOWANCE_LOCATION, spender, msg.sender, tokenId, allowance-amount, msg.sender, sender, receiver, tokenId, amount]
-    STORE_ELEMENT_FROM_KEYS_3D(push0)              // [msg.sender, sender, receiver, tokenId, amount]
+    [ALLOWANCE_LOCATION]                          // [ALLOWANCE_LOCATION, spender, msg.sender, tokenId, allowance-amount, msg.sender, sender, receiver, tokenId, amount]
+    STORE_ELEMENT_FROM_KEYS_3D(push0)             // [msg.sender, sender, receiver, tokenId, amount]
     transferTo jump
 
     error:
@@ -226,6 +226,6 @@
         // Store amount in mem 
         dup4 push0 mstore                              // [msg.sender, sender, receiver, tokenId, amount]
 
-        __EVENT_HASH(Transfer)                        // [sig, msg.sender, sender, receiver, tokenId, amount]
+        __EVENT_HASH(Transfer)                         // [sig, msg.sender, sender, receiver, tokenId, amount]
         0x20 0x00 log4                                 // [amount]  
 }
