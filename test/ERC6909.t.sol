@@ -6,52 +6,539 @@ import "forge-std/Test.sol";
 
 import {IERC6909} from "../src/interfaces/IERC6909.sol";
 
-contract DateTimeLibTest is Test {
+/// @notice Modified from https://github.com/jtriley-eth/ERC-6909/blob/main/test/ERC6909.t.sol
+contract ERC6909Test is Test {
     /// @dev Address of the ERC6909 contract.
-    IERC6909 public sut;
+    IERC6909 public erc6909;
 
     address user1 = makeAddr("user1");
+    address user2 = makeAddr("user2");
+    address alice = vm.addr(1);
+    address bob = vm.addr(2);
+    uint256 tokenId = 1;
+    uint256 amount = 100;
 
     event OperatorSet(address indexed owner, address indexed spender, uint256 approved);
+    event Approval(address indexed owner, address indexed spender, uint256 indexed id, uint256 amount);
+    event Transfer(address indexed sender, address indexed receiver, uint256 indexed id, uint256 amount);
 
     /// @dev Setup the testing environment.
     function setUp() public {
-        sut = IERC6909(HuffDeployer.deploy("wrappers/ERC6909Wrapper"));
-    }
-
-    function testMint() public {
-        assertEq(sut.balanceOf(user1, 1), 0);
-
-        _mint(user1, 1, 1);
-
-        assertEq(sut.balanceOf(user1, 1), 1);
+        erc6909 = IERC6909(HuffDeployer.deploy("wrappers/ERC6909Wrapper"));
     }
 
     function testTotalSupply() public {
-        _mint(user1, 1, 1);
+        _mint(alice, tokenId, 1);
 
-        assertEq(sut.totalSupply(1), 1);
+        assertEq(erc6909.totalSupply(tokenId), 1);
+    }
+
+    function testBalanceOf() public {
+        _mint(alice, tokenId, 1);
+
+        assertEq(erc6909.balanceOf(alice, tokenId), 1);
+        assertEq(erc6909.balanceOf(bob, tokenId), 0);
+    }
+
+    function testAllowance() public {
+        assertEq(erc6909.allowance(alice, bob, tokenId), 0);
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Approval(alice, bob, tokenId, 1);
+
+        vm.prank(alice);
+        erc6909.approve(bob, tokenId, 1);
+
+        assertEq(erc6909.allowance(alice, bob, tokenId), 1);
+    }
+
+    function testTransfer() public {
+        _mint(alice, tokenId, 1);
+
+        assertEq(erc6909.balanceOf(alice, tokenId), 1);
+        assertEq(erc6909.balanceOf(bob, tokenId), 0);
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(alice, bob, tokenId, 1);
+
+        vm.prank(alice);
+        assertTrue(erc6909.transfer(bob, tokenId, 1));
+        assertEq(erc6909.balanceOf(alice, tokenId), 0);
+        assertEq(erc6909.balanceOf(bob, tokenId), 1);
+    }
+
+    function testTransferFrom() public {
+        _mint(alice, tokenId, 1);
+
+        assertEq(erc6909.balanceOf(alice, tokenId), 1);
+        assertEq(erc6909.balanceOf(bob, tokenId), 0);
+        assertEq(erc6909.allowance(alice, bob, tokenId), 0);
+        vm.prank(alice);
+        erc6909.approve(bob, tokenId, 1);
+
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(alice, bob, tokenId, 1);
+
+        vm.prank(bob);
+        assertTrue(erc6909.transferFrom(alice, bob, tokenId, 1));
+        assertEq(erc6909.balanceOf(alice, tokenId), 0);
+        assertEq(erc6909.balanceOf(bob, tokenId), 1);
+        assertEq(erc6909.allowance(alice, bob, tokenId), 0);
+    }
+
+    function testTransferFromCallerIsSender() public {
+        _mint(alice, tokenId, 1);
+
+        assertEq(erc6909.balanceOf(alice, tokenId), 1);
+        assertEq(erc6909.balanceOf(bob, tokenId), 0);
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(alice, bob, tokenId, 1);
+
+        vm.prank(alice);
+        assertTrue(erc6909.transferFrom(alice, bob, tokenId, 1));
+        assertEq(erc6909.balanceOf(alice, tokenId), 0);
+        assertEq(erc6909.balanceOf(bob, tokenId), 1);
+    }
+
+    function testTransferFromCallerIsOperator() public {
+        _mint(alice, tokenId, 1);
+
+        assertEq(erc6909.balanceOf(alice, tokenId), 1);
+        assertEq(erc6909.balanceOf(bob, tokenId), 0);
+        assertFalse(erc6909.isOperator(alice, bob));
+        vm.prank(alice);
+        erc6909.setOperator(bob, 1);
+
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(alice, bob, tokenId, 1);
+
+        vm.prank(bob);
+        assertTrue(erc6909.transferFrom(alice, bob, tokenId, 1));
+        assertEq(erc6909.balanceOf(alice, tokenId), 0);
+        assertEq(erc6909.balanceOf(bob, tokenId), 1);
+        assertTrue(erc6909.isOperator(alice, bob));
+    }
+
+    function testApprove() public {
+        assertEq(erc6909.allowance(alice, bob, tokenId), 0);
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Approval(alice, bob, tokenId, 1);
+
+        vm.prank(alice);
+        erc6909.approve(bob, tokenId, 1);
+
+        assertEq(erc6909.allowance(alice, bob, tokenId), 1);
     }
 
     function testSetOperator() public {
-        vm.prank(address(this));
-        sut.setOperator(user1, 1);
+        assertFalse(erc6909.isOperator(alice, bob));
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit OperatorSet(alice, bob, 1);
 
-        assertEq(sut.isOperator(address(this), user1), true);
+        vm.prank(alice);
+        erc6909.setOperator(bob, 1);
+
+        assertTrue(erc6909.isOperator(alice, bob));
     }
 
-    function testSetOperator_ShouldEmitEvent() public {
-        vm.expectEmit(true, true, true, true);
-        emit OperatorSet(address(this), user1, 1);
-        sut.setOperator(user1, 1);
+    function testSupportsInterface() public {
+        // type(Ierc6909).interfaceId
+        // type(IERC165).interfaceId
+        assertTrue(erc6909.supportsInterface(0xb2e69f8a));
+        assertTrue(erc6909.supportsInterface(0x01ffc9a7));
     }
 
-    function testSetOperator_ShouldRevert_WhenApprovedGt1() public {
+    function testTransferZeroValue() public {
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(alice, bob, tokenId, 0);
+
+        vm.prank(alice);
+        assertTrue(erc6909.transfer(bob, tokenId, 0));
+        assertEq(erc6909.balanceOf(alice, tokenId), 0);
+        assertEq(erc6909.balanceOf(bob, tokenId), 0);
+    }
+
+    function testTransferFromZeroValue() public {
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(alice, bob, tokenId, 0);
+
+        vm.prank(bob);
+        assertTrue(erc6909.transferFrom(alice, bob, tokenId, 0));
+        assertEq(erc6909.balanceOf(alice, tokenId), 0);
+        assertEq(erc6909.balanceOf(bob, tokenId), 0);
+    }
+
+    function testApproveZeroValue() public {
+        vm.prank(alice);
+        erc6909.approve(bob, tokenId, 1);
+        assertEq(erc6909.allowance(alice, bob, tokenId), 1);
+
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Approval(alice, bob, tokenId, 0);
+
+        vm.prank(alice);
+        erc6909.approve(bob, tokenId, 0);
+
+        assertEq(erc6909.allowance(alice, bob, tokenId), 0);
+    }
+
+    function testSetOperatorFalse() public {
+        vm.prank(alice);
+        erc6909.setOperator(bob, 1);
+        assertTrue(erc6909.isOperator(alice, bob));
+
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit OperatorSet(alice, bob, 0);
+
+        vm.prank(alice);
+        erc6909.setOperator(bob, 0);
+
+        assertFalse(erc6909.isOperator(alice, bob));
+    }
+
+    function testOperatorDoesNotDeductAllowance() public {
+        _mint(alice, tokenId, 1);
+        vm.prank(alice);
+        erc6909.approve(bob, tokenId, 1);
+        assertEq(erc6909.allowance(alice, bob, tokenId), 1);
+        vm.prank(alice);
+        erc6909.setOperator(bob, 1);
+        assertTrue(erc6909.isOperator(alice, bob));
+
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(alice, bob, tokenId, 1);
+
+        vm.prank(bob);
+        assertTrue(erc6909.transferFrom(alice, bob, tokenId, 1));
+        assertEq(erc6909.allowance(alice, bob, tokenId), 1);
+        assertEq(erc6909.balanceOf(alice, tokenId), 0);
+        assertEq(erc6909.balanceOf(bob, tokenId), 1);
+    }
+
+    function testSelfTransfer() public {
+        _mint(alice, tokenId, 1);
+
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(alice, alice, tokenId, 1);
+
+        vm.prank(alice);
+        assertTrue(erc6909.transfer(alice, tokenId, 1));
+
+        assertEq(erc6909.balanceOf(alice, tokenId), 1);
+    }
+
+    function testSelfTransferFrom() public {
+        _mint(alice, tokenId, 1);
+
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(alice, alice, tokenId, 1);
+
+        vm.prank(alice);
+        assertTrue(erc6909.transferFrom(alice, alice, tokenId, 1));
+        assertEq(erc6909.balanceOf(alice, tokenId), 1);
+    }
+
+    function testSelfApprove() public {
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Approval(alice, alice, tokenId, 1);
+
+        vm.prank(alice);
+        erc6909.approve(alice, tokenId, 1);
+
+        assertEq(erc6909.allowance(alice, alice, tokenId), 1);
+    }
+
+    function testSelfSetOperator() public {
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit OperatorSet(alice, alice, 1);
+
+        vm.prank(alice);
+        erc6909.setOperator(alice, 1);
+
+        assertTrue(erc6909.isOperator(alice, alice));
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Failure Cases
+
+    function testTransferInsufficientBalance() public {
+        _mint(alice, tokenId, 1);
+
+        assertEq(erc6909.balanceOf(alice, tokenId), 1);
+        assertEq(erc6909.balanceOf(bob, tokenId), 0);
         vm.expectRevert();
-        sut.setOperator(user1, 3);
+
+        vm.prank(alice);
+        erc6909.transfer(bob, tokenId, 2);
     }
 
-    function _mint(address user, uint256 amount, uint256 id) internal {
-        address(sut).call(abi.encodeWithSignature("mint(address,uint256,uint256,bytes)", user, amount, id, ""));
+    function testTransferFromInsufficientBalance() public {
+        _mint(alice, tokenId, 1);
+
+        assertEq(erc6909.balanceOf(alice, tokenId), 1);
+        assertEq(erc6909.balanceOf(bob, tokenId), 0);
+        vm.expectRevert();
+
+        vm.prank(alice);
+        erc6909.transferFrom(alice, bob, tokenId, 2);
+    }
+
+    function testTransferFromInsufficientPermission() public {
+        _mint(alice, tokenId, 1);
+
+        assertEq(erc6909.balanceOf(alice, tokenId), 1);
+        assertEq(erc6909.balanceOf(bob, tokenId), 0);
+        assertEq(erc6909.allowance(alice, bob, tokenId), 0);
+        vm.expectRevert();
+
+        vm.prank(bob);
+        erc6909.transferFrom(alice, bob, tokenId, 1);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Fuzz Tests
+
+    function testFuzzTotalSupply(uint256 id, uint256 value) public {
+        _mint(alice, id, value);
+
+        assertEq(erc6909.totalSupply(id), value);
+    }
+
+    function testFuzzBalanceOf(address owner, uint256 id, uint256 value) public {
+        _mint(owner, id, value);
+
+        assertEq(erc6909.balanceOf(owner, id), value);
+    }
+
+    function testFuzzAllowance(address owner, address spender, uint256 id, uint256 value) public {
+        assertEq(erc6909.allowance(owner, spender, id), 0);
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Approval(owner, spender, id, value);
+
+        vm.prank(owner);
+        erc6909.approve(spender, id, value);
+
+        assertEq(erc6909.allowance(owner, spender, id), value);
+    }
+
+    function testFuzzTransfer(address sender, address receiver, uint256 id, uint256 value) public {
+        _mint(sender, id, value);
+        vm.assume(sender != address(0));
+        vm.assume(receiver != address(0));
+
+        if (sender != receiver) {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), 0);
+        } else {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        }
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(sender, receiver, id, value);
+
+        vm.prank(sender);
+        assertTrue(erc6909.transfer(receiver, id, value));
+
+        if (sender != receiver) {
+            assertEq(erc6909.balanceOf(sender, id), 0);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        } else {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        }
+    }
+
+    function testFuzzTransferFrom(address spender, address sender, address receiver, uint256 id, uint256 value)
+        public
+    {
+        _mint(sender, id, value);
+        vm.assume(sender != address(0));
+        vm.assume(receiver != address(0));
+        vm.assume(spender != address(0));
+        vm.assume(value > 0);
+
+        if (sender != receiver) {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), 0);
+        } else {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        }
+        assertEq(erc6909.allowance(sender, spender, id), 0);
+        vm.prank(sender);
+        erc6909.approve(spender, id, value);
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(sender, receiver, id, value);
+
+        vm.prank(spender);
+        assertTrue(erc6909.transferFrom(sender, receiver, id, value));
+
+        if (sender != receiver) {
+            assertEq(erc6909.balanceOf(sender, id), 0);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        } else {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        }
+        if (sender != spender && value != type(uint256).max) {
+            assertEq(erc6909.allowance(sender, spender, id), 0);
+        }
+    }
+
+    function testFuzzTransferFromCallerIsSender(address sender, address receiver, uint256 id, uint256 value) public {
+        _mint(sender, id, value);
+
+        if (sender != receiver) {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), 0);
+        } else {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        }
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(sender, receiver, id, value);
+
+        vm.prank(sender);
+        assertTrue(erc6909.transferFrom(sender, receiver, id, value));
+
+        if (sender != receiver) {
+            assertEq(erc6909.balanceOf(sender, id), 0);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        } else {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        }
+    }
+
+    function testFuzzTransferFromCallerIsOperator(
+        address spender,
+        address sender,
+        address receiver,
+        uint256 id,
+        uint256 value
+    ) public {
+        _mint(sender, id, value);
+
+        if (sender != receiver) {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), 0);
+        } else {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        }
+        assertFalse(erc6909.isOperator(sender, spender));
+        vm.prank(sender);
+        erc6909.setOperator(spender, 1);
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(sender, receiver, id, value);
+
+        vm.prank(spender);
+        assertTrue(erc6909.transferFrom(sender, receiver, id, value));
+
+        if (sender != receiver) {
+            assertEq(erc6909.balanceOf(sender, id), 0);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        } else {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        }
+        assertTrue(erc6909.isOperator(sender, spender));
+    }
+
+    function testFuzzApprove(address owner, address spender, uint256 id, uint256 value) public {
+        assertEq(erc6909.allowance(owner, spender, id), 0);
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Approval(owner, spender, id, value);
+
+        vm.prank(owner);
+        erc6909.approve(spender, id, value);
+
+        assertEq(erc6909.allowance(owner, spender, id), value);
+    }
+
+    function testFuzzSetOperator(address owner, address spender, bool approved) public {
+        assertFalse(erc6909.isOperator(owner, spender));
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit OperatorSet(owner, spender, 1);
+
+        vm.prank(owner);
+        erc6909.setOperator(spender, 1);
+
+        assertEq(erc6909.isOperator(owner, spender), true);
+    }
+
+    function testFuzzOperatorDoesNotDeductAllowance(
+        address spender,
+        address sender,
+        address receiver,
+        uint256 id,
+        uint256 value
+    ) public {
+        _mint(sender, id, value);
+        vm.prank(sender);
+        erc6909.approve(spender, id, value);
+        assertEq(erc6909.allowance(sender, spender, id), value);
+
+        vm.prank(sender);
+        erc6909.setOperator(spender, 1);
+        assertTrue(erc6909.isOperator(sender, spender));
+
+        vm.expectEmit(true, true, true, true, address(erc6909));
+        emit Transfer(sender, receiver, id, value);
+
+        vm.prank(spender);
+        assertTrue(erc6909.transferFrom(sender, receiver, id, value));
+        assertEq(erc6909.allowance(sender, spender, id), value);
+
+        if (sender != receiver) {
+            assertEq(erc6909.balanceOf(sender, id), 0);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        } else {
+            assertEq(erc6909.balanceOf(sender, id), value);
+            assertEq(erc6909.balanceOf(receiver, id), value);
+        }
+    }
+
+    function testFuzzTransferInsufficientBalance(address sender, address receiver, uint256 id, uint256 value) public {
+        value = bound(value, 1, type(uint256).max);
+        assertEq(erc6909.balanceOf(sender, id), 0);
+        assertEq(erc6909.balanceOf(receiver, id), 0);
+        vm.expectRevert();
+
+        vm.prank(sender);
+        erc6909.transfer(receiver, id, value);
+    }
+
+    function testFuzzTransferFromInsufficientBalance(address sender, address receiver, uint256 id, uint256 value)
+        public
+    {
+        value = bound(value, 1, type(uint256).max);
+        assertEq(erc6909.balanceOf(sender, id), 0);
+        assertEq(erc6909.balanceOf(receiver, id), 0);
+        vm.expectRevert();
+
+        vm.prank(sender);
+        erc6909.transferFrom(sender, receiver, id, value);
+    }
+
+    function testFuzzTransferFromInsufficientPermission(
+        address spender,
+        address sender,
+        address receiver,
+        uint256 id,
+        uint256 value
+    ) public {
+        vm.assume(spender != sender);
+        value = bound(value, 1, type(uint256).max);
+        assertEq(erc6909.balanceOf(sender, id), 0);
+        assertEq(erc6909.balanceOf(receiver, id), 0);
+        assertEq(erc6909.allowance(sender, spender, id), 0);
+        vm.expectRevert();
+
+        vm.prank(spender);
+        erc6909.transferFrom(sender, receiver, id, value);
+    }
+
+    //// Internal
+    function _mint(address _user, uint256 _amount, uint256 _id) internal {
+        address(erc6909).call(abi.encodeWithSignature("mint(address,uint256,uint256,bytes)", _user, _amount, _id, ""));
     }
 }
