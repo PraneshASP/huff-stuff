@@ -168,3 +168,64 @@
      __EVENT_HASH(Transfer)                        // [sig, msg.sender, receiver, tokenId, amount]
     0x20 0x00 log4                                 // [amount]  
 }
+
+
+/// @title Transfer From
+/// @dev Performs token transfer to the recipient from the sender 
+/// @param {calldata} [address sender, address receiver, uint256 tokenId, uint256 amount]
+/// @return [bool]
+#define macro TRANSFER_FROM() = takes (0) returns (0) {
+    // input stack: [msg.sender, sender, receiver, tokenId, amount]
+
+    dup2 dup2                                      // [msg.sender, sender, msg.sender, sender, receiver, tokenId, amount]
+    
+    // if msg.sender == sender || isOperator[sender][caller], call transfer
+    eq                                            // [msg.sender == sender, msg.sender, sender, receiver, tokenId, amount]
+    dup2                                          // [msg.sender, msg.sender == sender, msg.sender, sender, receiver, tokenId, amount] 
+    dup4                                          // [sender, msg.sender, msg.sender == sender, msg.sender, sender, receiver, tokenId, amount]
+    IS_OPERATOR()                                 // [isOperator, msg.sender == sender, msg.sender, sender, receiver, tokenId, amount]  
+    or                                            // [isOperator || msg.sender == sender, msg.sender, sender, receiver, tokenId, amount]   
+    transferTo jumpi  
+
+    // else decrease allowance
+    dup5 dup5 dup3 dup5                           // [sender, msg.sender, tokenId, amount, msg.sender, sender, receiver, tokenId, amount]    
+    ALLOWANCE()                                   // [allowance, amount, msg.sender, sender, receiver, tokenId, amount]  
+    SAFE_SUB()                                    // [allowance-amount, msg.sender, sender, receiver, tokenId, amount]    
+   
+    dup5 dup3 dup5                                // [sender, msg.sender, tokenId, allowance-amount, msg.sender, sender, receiver, tokenId, amount] 
+   
+    [ALLOWANCE_LOCATION]                           // [ALLOWANCE_LOCATION, spender, msg.sender, tokenId, allowance-amount, msg.sender, sender, receiver, tokenId, amount]
+    STORE_ELEMENT_FROM_KEYS_3D(push0)              // [msg.sender, sender, receiver, tokenId, amount]
+    transferTo jump
+
+    error:
+    0x00 0x00 revert
+
+    transferTo:
+        pop
+        dup3  dup2                                     // [msg.sender, tokenId, msg.sender, sender, receiver, tokenId, amount]
+        BALANCE_OF()                                   // [balance, msg.sender, sender, receiver, tokenId, amount]    
+        dup5                                           // [amount, balance, msg.sender, sender, receiver, tokenId, amount]  
+        swap1                                          // [balance, amount, msg.sender, sender, receiver, tokenId, amount]  
+    
+        // Using safe sub to revert on underflow 
+        SAFE_SUB()                                     // [balance - amount, msg.sender, sender, receiver, tokenId, amount]   
+        dup4 dup3                                      // [msg.sender, tokenId, updatedBalance, msg.sender, sender, receiver, tokenId, amount]     
+        [BALANCE_LOCATION]                             // [ref, msg.sender, tokenId, updatedBalance, msg.sender, sender, receiver, tokenId, amount]     
+        STORE_ELEMENT_FROM_KEYS_2D(push0)              // [msg.sender, sender, receiver, tokenId, amount]
+
+        dup3  dup3                                     // [receiver, tokenId, msg.sender, sender, receiver, tokenId, amount]
+        BALANCE_OF()                                   // [balance, msg.sender, sender, receiver, tokenId, amount]    
+        dup5                                           // [amount, balance, msg.sender, sender, receiver, tokenId, amount]     
+        // Using safe add to revert on overflow 
+        SAFE_ADD()                                     // [balance + amount, msg.sender, sender, receiver, tokenId, amount]   
+        dup4 dup4                                      // [receiver, tokenId, updatedBalance, msg.sender, sender, receiver, tokenId, amount]     
+        [BALANCE_LOCATION]                             // [ref, msg.sender, tokenId, updatedBalance, msg.sender, sender, receiver, tokenId, amount]     
+        STORE_ELEMENT_FROM_KEYS_2D(push0)              // [slot, updatedBalance, msg.sender, sender, receiver, tokenId, amount]
+                                                 
+        // Store amount in mem 
+        dup4 push0 mstore                              // [msg.sender, sender, receiver, tokenId, amount]
+
+        __EVENT_HASH(Transfer)                        // [sig, msg.sender, sender, receiver, tokenId, amount]
+        0x20 0x00 log4                                 // [amount]  
+}

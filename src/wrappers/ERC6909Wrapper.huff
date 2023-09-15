@@ -81,6 +81,18 @@
     0x20 push0 return                            // [] return 32 bytes  
  }
 
+  #define macro TRANSFER_FROM_WRAPPER() = takes (0) returns (0) {
+    0x64 calldataload                            // [amount]
+    0x44 calldataload                            // [tokenId, amount]
+    0x24 calldataload                            // [to, tokenId, amount]
+    0x04 calldataload                            // [from, to, tokenId, amount]
+    caller                                       // [msg.sender, from, to, tokenId, amount]
+    TRANSFER_FROM()
+    0x1                                          // [true]
+    push0 mstore                                 // [] store into mem
+    0x20 push0 return                            // [] return 32 bytes  
+ }
+
 /// @title Mint (helper method)
 /// @notice Mint a token to the given account
 /// @notice This method does NOT validate caller. 
@@ -139,6 +151,7 @@
     dup1 __FUNC_SIG(allowance)    eq  allowance      jumpi
     dup1 __FUNC_SIG(approve)      eq  approve        jumpi
     dup1 __FUNC_SIG(transfer)     eq  transfer       jumpi
+    dup1 __FUNC_SIG(transferFrom) eq  transferFrom   jumpi
 
 
    no_match jump
@@ -166,6 +179,9 @@
  
     transfer:
         TRANSFER_WRAPPER()
+
+    transferFrom:
+        TRANSFER_FROM_WRAPPER()
   
     no_match:
 }
