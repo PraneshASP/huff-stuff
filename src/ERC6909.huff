@@ -14,7 +14,7 @@
 #define function balanceOf(address owner, uint256 id) nonpayable returns (uint256 amount)
 #define function isOperator(address owner, address spender) nonpayable returns (bool approved)
 #define function allowance(address owner, address spender, uint256 id) nonpayable returns (uint256 amount)
-
+#define function supportsInterface(bytes4 interfaceId) nonpayable returns (bool supported)
 #define function setOperator(address spender,uint256 approved) nonpayable returns ()
 #define function transfer(address receiver, uint256 id, uint256 amount) payable returns (bool)
 #define function approve(address spender, uint256 id, uint256 amount) nonpayable returns (bool)
@@ -79,17 +79,17 @@
 /// @return [bool]
 #define macro SUPPORTS_INTERFACE() = takes (0) returns(0) {
     0x04 calldataload
+    0xe0 shr                
     dup1 0x01ffc9a7 eq isTrue jumpi
-    dup1 0xd9b67a26 eq isTrue jumpi
-    dup1 0x0e89341c eq isTrue jumpi
+    dup1 0xb2e69f8a eq isTrue jumpi 
     
     push0
-
-    push0 dup1 mstore
+    push0 mstore
     0x20 push0 return
 
     isTrue:
-        0x01 0x20 mstore
+        0x1
+        push0 mstore
         0x20 push0 return
 }
  

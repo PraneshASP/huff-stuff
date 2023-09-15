@@ -153,6 +153,8 @@
     dup1 __FUNC_SIG(transfer)     eq  transfer       jumpi
     dup1 __FUNC_SIG(transferFrom) eq  transferFrom   jumpi
 
+    dup1 __FUNC_SIG(supportsInterface) eq  supportsInterface   jumpi
+
 
    no_match jump
 
@@ -182,7 +184,10 @@
 
     transferFrom:
         TRANSFER_FROM_WRAPPER()
-  
+
+    supportsInterface:
+        SUPPORTS_INTERFACE()
+        
     no_match:
 }
 
